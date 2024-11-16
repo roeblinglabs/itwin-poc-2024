@@ -6,7 +6,7 @@
 import "./App.scss";
 
 import type { ScreenViewport } from "@itwin/core-frontend";
-import { FitViewTool, IModelApp, StandardViewId } from "@itwin/core-frontend";
+import { FitViewTool, IModelApp, StandardViewId, Marker, DecorateContext } from "@itwin/core-frontend";
 import { FillCentered } from "@itwin/core-react";
 import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
 import { ProgressLinear } from "@itwin/itwinui-react";
@@ -38,9 +38,32 @@ import {
 } from "@itwin/web-viewer-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
+import { Point3d } from "@itwin/core-geometry";
 import { Auth } from "./Auth";
 import { history } from "./history";
 import { getSchemaContext, unifiedSelectionStorage } from "./selectionStorage";
+
+export class VideoCameraMarker extends Marker {
+  constructor(location: Point3d, size: { x: number; y: number }, label: string) {
+    super(location, size);
+
+    this.title = `Video Camera: ${label}`;
+    this.setImageUrl("/images/icons8-video-camera-64.png");
+    this.label = label;
+    this.labelOffset = { x: 0, y: 30 };
+  }
+}
+
+export class DisplacementSensorMarker extends Marker {
+  constructor(location: Point3d, size: { x: number; y: number }, label: string) {
+    super(location, size);
+
+    this.title = `Displacement Sensor: ${label}`;
+    this.setImageUrl("/images/icons8-sensor-96.png");
+    this.label = label;
+    this.labelOffset = { x: 0, y: 30 };
+  }
+}
 
 const App: React.FC = () => {
   const [iModelId, setIModelId] = useState(process.env.IMJS_IMODEL_ID);
@@ -50,7 +73,6 @@ const App: React.FC = () => {
   );
 
   const accessToken = useAccessToken();
-
   const authClient = Auth.getClient();
 
   const login = useCallback(async () => {
@@ -80,60 +102,47 @@ const App: React.FC = () => {
 
   useEffect(() => {
     let url = `viewer?iTwinId=${iTwinId}`;
-
-    if (iModelId) {
-      url = `${url}&iModelId=${iModelId}`;
-    }
-
-    if (changesetId) {
-      url = `${url}&changesetId=${changesetId}`;
-    }
+    if (iModelId) url = `${url}&iModelId=${iModelId}`;
+    if (changesetId) url = `${url}&changesetId=${changesetId}`;
     history.push(url);
   }, [iTwinId, iModelId, changesetId]);
 
-  /** NOTE: This function will execute the "Fit View" tool after the iModel is loaded into the Viewer.
-   * This will provide an "optimal" view of the model. However, it will override any default views that are
-   * stored in the iModel. Delete this function and the prop that it is passed to if you prefer
-   * to honor default views when they are present instead (the Viewer will still apply a similar function to iModels that do not have a default view).
-   */
-  const viewConfiguration = useCallback((viewPort: ScreenViewport) => {
-    // default execute the fitview tool and use the iso standard view after tile trees are loaded
-    const tileTreesLoaded = () => {
-      return new Promise((resolve, reject) => {
-        const start = new Date();
-        const intvl = setInterval(() => {
-          if (viewPort.areAllTileTreesLoaded) {
-            ViewerPerformance.addMark("TilesLoaded");
-            ViewerPerformance.addMeasure(
-              "TileTreesLoaded",
-              "ViewerStarting",
-              "TilesLoaded"
-            );
-            clearInterval(intvl);
-            resolve(true);
-          }
-          const now = new Date();
-          // after 20 seconds, stop waiting and fit the view
-          if (now.getTime() - start.getTime() > 20000) {
-            reject();
-          }
-        }, 100);
-      });
-    };
+  const viewCreatorOptions = useMemo(() => {
+    return {
+      viewportConfigurer: (vp: ScreenViewport) => {
+        class MarkerDecorator {
+          private videoMarkers: Marker[];
+          private displacementMarkers: Marker[];
 
-    tileTreesLoaded().finally(() => {
-      void IModelApp.tools.run(FitViewTool.toolId, viewPort, true, false);
-      viewPort.view.setStandardRotation(StandardViewId.Iso);
-    });
+          constructor(videoMarkers: Marker[], displacementMarkers: Marker[]) {
+            this.videoMarkers = videoMarkers;
+            this.displacementMarkers = displacementMarkers;
+          }
+
+          public decorate(context: DecorateContext): void {
+            this.videoMarkers.forEach((marker) => marker.addDecoration(context));
+            this.displacementMarkers.forEach((marker) => marker.addDecoration(context));
+          }
+        }
+
+        const videoCameraMarkers = [
+          new VideoCameraMarker(new Point3d(-10, 20, 5), { x: 40, y: 40 }, "Shore Camera 1"),
+          new VideoCameraMarker(new Point3d(-15, 25, 5), { x: 40, y: 40 }, "Shore Camera 2"),
+        ];
+
+        const displacementMarkers = [
+          new DisplacementSensorMarker(new Point3d(0, 0, 10), { x: 40, y: 40 }, "Bridge Girder 1"),
+          new DisplacementSensorMarker(new Point3d(5, 0, 10), { x: 40, y: 40 }, "Bridge Girder 2"),
+          new DisplacementSensorMarker(new Point3d(10, 0, 10), { x: 40, y: 40 }, "Bridge Girder 3"),
+        ];
+
+        const markerDecorator = new MarkerDecorator(videoCameraMarkers, displacementMarkers);
+        IModelApp.viewManager.addDecorator(markerDecorator);
+      },
+    };
   }, []);
 
-  const viewCreatorOptions = useMemo(
-    () => ({ viewportConfigurer: viewConfiguration }),
-    [viewConfiguration]
-  );
-
   const onIModelAppInit = useCallback(async () => {
-    // iModel now initialized
     await TreeWidget.initialize();
     await PropertyGridManager.initialize();
     await MeasureTools.startup();
@@ -155,86 +164,8 @@ const App: React.FC = () => {
         changeSetId={changesetId}
         authClient={authClient}
         viewCreatorOptions={viewCreatorOptions}
-        enablePerformanceMonitors={true} // see description in the README (https://www.npmjs.com/package/@itwin/web-viewer-react)
+        enablePerformanceMonitors={true}
         onIModelAppInit={onIModelAppInit}
-        mapLayerOptions={{
-          BingMaps: {
-            key: "key",
-            value: process.env.IMJS_BING_MAPS_KEY ?? "",
-          },
-        }}
-        backendConfiguration={{
-          defaultBackend: {
-            rpcInterfaces: [ECSchemaRpcInterface],
-          },
-        }}
-        uiProviders={[
-          new ViewerNavigationToolsProvider(),
-          new ViewerContentToolsProvider({
-            vertical: {
-              measureGroup: false,
-            },
-          }),
-          new ViewerStatusbarItemsProvider(),
-          {
-            id: "TreeWidgetUIProvider",
-            getWidgets: () => [
-              createTreeWidget({
-                trees: [
-                  {
-                    id: ModelsTreeComponent.id,
-                    getLabel: () => ModelsTreeComponent.getLabel(),
-                    render: (props) => (
-                      <ModelsTreeComponent
-                        getSchemaContext={getSchemaContext}
-                        density={props.density}
-                        selectionStorage={unifiedSelectionStorage}
-                        selectionMode={"extended"}
-                        onPerformanceMeasured={props.onPerformanceMeasured}
-                        onFeatureUsed={props.onFeatureUsed}
-                      />
-                    ),
-                  },
-                  {
-                    id: CategoriesTreeComponent.id,
-                    getLabel: () => CategoriesTreeComponent.getLabel(),
-                    render: (props) => (
-                      <CategoriesTreeComponent
-                        getSchemaContext={getSchemaContext}
-                        density={props.density}
-                        selectionStorage={unifiedSelectionStorage}
-                        onPerformanceMeasured={props.onPerformanceMeasured}
-                        onFeatureUsed={props.onFeatureUsed}
-                      />
-                    ),
-                  },
-                ],
-              }),
-            ],
-          },
-          new PropertyGridUiItemsProvider({
-            propertyGridProps: {
-              autoExpandChildCategories: true,
-              ancestorsNavigationControls: (props) => (
-                <AncestorsNavigationControls {...props} />
-              ),
-              contextMenuItems: [
-                (props) => <CopyPropertyTextContextMenuItem {...props} />,
-              ],
-              settingsMenuItems: [
-                (props) => (
-                  <ShowHideNullValuesSettingsMenuItem
-                    {...props}
-                    persist={true}
-                  />
-                ),
-              ],
-            },
-          }),
-          new MeasureToolsUiItemsProvider(),
-        ]}
-        selectionStorage={unifiedSelectionStorage}
-        getSchemaContext={getSchemaContext}
       />
     </div>
   );
