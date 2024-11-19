@@ -51,6 +51,14 @@ export class VideoCameraMarker extends Marker {
     this.setImageUrl("/images/icons8-video-camera-64.png");
     this.label = label;
     this.labelOffset = { x: 0, y: 30 };
+
+    this.onMouseButton = (ev) => {
+      if (ev.button === 0) {
+        window.open("https://youtu.be/oHg5SJYRHA0?si=_bOwtXT9q-AU8v3J", "_blank");
+        return true;
+      }
+      return false;
+    };
   }
 }
 
@@ -62,6 +70,33 @@ export class DisplacementSensorMarker extends Marker {
     this.setImageUrl("/images/icons8-sensor-96.png");
     this.label = label;
     this.labelOffset = { x: 0, y: 30 };
+
+    this.onMouseButton = (ev) => {
+      if (ev.button === 0) {
+        window.open("https://youtu.be/oHg5SJYRHA0?si=_bOwtXT9q-AU8v3J", "_blank");
+        return true;
+      }
+      return false;
+    };
+  }
+}
+
+export class MicroscopeMarker extends Marker {
+  constructor(location: Point3d, size: { x: number; y: number }, label: string) {
+    super(location, size);
+
+    this.title = `Microscope: ${label}`;
+    this.setImageUrl("/images/icons8-microscope-64.png");
+    this.label = label;
+    this.labelOffset = { x: 0, y: 30 };
+
+    this.onMouseButton = (ev) => {
+      if (ev.button === 0) {
+        window.open("https://youtu.be/oHg5SJYRHA0?si=_bOwtXT9q-AU8v3J", "_blank");
+        return true;
+      }
+      return false;
+    };
   }
 }
 
@@ -113,15 +148,18 @@ const App: React.FC = () => {
         class MarkerDecorator {
           private videoMarkers: Marker[];
           private displacementMarkers: Marker[];
+          private microscopeMarkers: Marker[];
 
-          constructor(videoMarkers: Marker[], displacementMarkers: Marker[]) {
+          constructor(videoMarkers: Marker[], displacementMarkers: Marker[], microscopeMarkers: Marker[]) {
             this.videoMarkers = videoMarkers;
             this.displacementMarkers = displacementMarkers;
+            this.microscopeMarkers = microscopeMarkers;
           }
 
           public decorate(context: DecorateContext): void {
             this.videoMarkers.forEach((marker) => marker.addDecoration(context));
             this.displacementMarkers.forEach((marker) => marker.addDecoration(context));
+            this.microscopeMarkers.forEach((marker) => marker.addDecoration(context));
           }
         }
 
@@ -136,7 +174,11 @@ const App: React.FC = () => {
           new DisplacementSensorMarker(new Point3d(10, 0, 10), { x: 40, y: 40 }, "Bridge Girder 3"),
         ];
 
-        const markerDecorator = new MarkerDecorator(videoCameraMarkers, displacementMarkers);
+        const microscopeMarkers = [
+          new MicroscopeMarker(new Point3d(20, 10, 15), { x: 40, y: 40 }, "Microscope 1"),
+        ];
+
+        const markerDecorator = new MarkerDecorator(videoCameraMarkers, displacementMarkers, microscopeMarkers);
         IModelApp.viewManager.addDecorator(markerDecorator);
       },
     };
