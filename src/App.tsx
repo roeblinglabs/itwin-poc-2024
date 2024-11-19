@@ -44,7 +44,7 @@ import { history } from "./history";
 import { getSchemaContext, unifiedSelectionStorage } from "./selectionStorage";
 
 export class VideoCameraMarker extends Marker {
-  constructor(location: Point3d, size: { x: number; y: number }, label: string) {
+  constructor(location: Point3d, size: { x: number; y: number }, label: string, onClick: () => void) {
     super(location, size);
 
     this.title = `Video Camera: ${label}`;
@@ -54,7 +54,7 @@ export class VideoCameraMarker extends Marker {
 
     this.onMouseButton = (ev) => {
       if (ev.button === 0) {
-        window.open("https://youtu.be/oHg5SJYRHA0?si=_bOwtXT9q-AU8v3J", "_blank");
+        onClick(); // Call the provided onClick function
         return true;
       }
       return false;
@@ -63,7 +63,7 @@ export class VideoCameraMarker extends Marker {
 }
 
 export class DisplacementSensorMarker extends Marker {
-  constructor(location: Point3d, size: { x: number; y: number }, label: string) {
+  constructor(location: Point3d, size: { x: number; y: number }, label: string, onClick: () => void) {
     super(location, size);
 
     this.title = `Displacement Sensor: ${label}`;
@@ -73,7 +73,7 @@ export class DisplacementSensorMarker extends Marker {
 
     this.onMouseButton = (ev) => {
       if (ev.button === 0) {
-        window.open("https://youtu.be/oHg5SJYRHA0?si=_bOwtXT9q-AU8v3J", "_blank");
+        onClick(); // Call the provided onClick function
         return true;
       }
       return false;
@@ -82,7 +82,7 @@ export class DisplacementSensorMarker extends Marker {
 }
 
 export class MicroscopeMarker extends Marker {
-  constructor(location: Point3d, size: { x: number; y: number }, label: string) {
+  constructor(location: Point3d, size: { x: number; y: number }, label: string, onClick: () => void) {
     super(location, size);
 
     this.title = `Microscope: ${label}`;
@@ -92,7 +92,7 @@ export class MicroscopeMarker extends Marker {
 
     this.onMouseButton = (ev) => {
       if (ev.button === 0) {
-        window.open("https://youtu.be/oHg5SJYRHA0?si=_bOwtXT9q-AU8v3J", "_blank");
+        onClick(); // Call the provided onClick function
         return true;
       }
       return false;
@@ -106,6 +106,7 @@ const App: React.FC = () => {
   const [changesetId, setChangesetId] = useState(
     process.env.IMJS_AUTH_CLIENT_CHANGESET_ID
   );
+  const [showVideo, setShowVideo] = useState(false); // New state to control video display
 
   const accessToken = useAccessToken();
   const authClient = Auth.getClient();
@@ -164,18 +165,18 @@ const App: React.FC = () => {
         }
 
         const videoCameraMarkers = [
-          new VideoCameraMarker(new Point3d(-10, 20, 5), { x: 40, y: 40 }, "Shore Camera 1"),
-          new VideoCameraMarker(new Point3d(-15, 25, 5), { x: 40, y: 40 }, "Shore Camera 2"),
+          new VideoCameraMarker(new Point3d(-10, 20, 5), { x: 40, y: 40 }, "Shore Camera 1", () => setShowVideo(true)),
+          new VideoCameraMarker(new Point3d(-15, 25, 5), { x: 40, y: 40 }, "Shore Camera 2", () => setShowVideo(true)),
         ];
 
         const displacementMarkers = [
-          new DisplacementSensorMarker(new Point3d(0, 0, 10), { x: 40, y: 40 }, "Bridge Girder 1"),
-          new DisplacementSensorMarker(new Point3d(5, 0, 10), { x: 40, y: 40 }, "Bridge Girder 2"),
-          new DisplacementSensorMarker(new Point3d(10, 0, 10), { x: 40, y: 40 }, "Bridge Girder 3"),
+          new DisplacementSensorMarker(new Point3d(0, 0, 10), { x: 40, y: 40 }, "Bridge Girder 1", () => setShowVideo(true)),
+          new DisplacementSensorMarker(new Point3d(5, 0, 10), { x: 40, y: 40 }, "Bridge Girder 2", () => setShowVideo(true)),
+          new DisplacementSensorMarker(new Point3d(10, 0, 10), { x: 40, y: 40 }, "Bridge Girder 3", () => setShowVideo(true)),
         ];
 
         const microscopeMarkers = [
-          new MicroscopeMarker(new Point3d(20, 10, 15), { x: 40, y: 40 }, "Microscope 1"),
+          new MicroscopeMarker(new Point3d(20, 10, 15), { x: 40, y: 40 }, "Microscope 1", () => setShowVideo(true)),
         ];
 
         const markerDecorator = new MarkerDecorator(videoCameraMarkers, displacementMarkers, microscopeMarkers);
@@ -193,6 +194,22 @@ const App: React.FC = () => {
 
   return (
     <div className="viewer-container">
+      {showVideo && (
+        <div className="video-overlay">
+          <iframe
+            width="560"
+            height="315"
+            src="https://www.youtube.com/embed/oHg5SJYRHA0"
+            title="YouTube video player"
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          ></iframe>
+          <button onClick={() => setShowVideo(false)} className="close-button">
+            Close
+          </button>
+        </div>
+      )}
       {!accessToken && (
         <FillCentered>
           <div className="signin-content">
@@ -214,3 +231,4 @@ const App: React.FC = () => {
 };
 
 export default App;
+
