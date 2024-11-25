@@ -1,8 +1,3 @@
-/*---------------------------------------------------------------------------------------------
- * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
- * See LICENSE.md in the project root for license terms and full copyright notice.
- *--------------------------------------------------------------------------------------------*/
-
 import "./App.scss";
 
 import type { ScreenViewport } from "@itwin/core-frontend";
@@ -199,7 +194,7 @@ const App: React.FC = () => {
           <iframe
             width="560"
             height="315"
-            src="https://www.youtube.com/embed/oHg5SJYRHA0"
+            src="https://www.youtube.com/embed/HZOfR7NVNtA?autoplay=1"
             title="YouTube video player"
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -231,4 +226,3 @@ const App: React.FC = () => {
 };
 
 export default App;
-

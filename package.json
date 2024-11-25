@@ -2,6 +2,7 @@
   "name": "concord-bridge-app",
   "version": "0.1.0",
   "private": true,
+  "homepage": "/",
   "dependencies": {
     "@bentley/icons-generic": "^1.0.34",
     "@bentley/react-scripts": "^5.0.7",
