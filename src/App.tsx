@@ -180,12 +180,27 @@ const App: React.FC = () => {
     };
   }, []);
 
-  const onIModelAppInit = useCallback(async () => {
+const onIModelAppInit = useCallback(async () => {
+  try {
+    console.log("Initializing TreeWidget...");
     await TreeWidget.initialize();
+    console.log("TreeWidget initialized successfully.");
+
+    console.log("Initializing PropertyGridManager...");
     await PropertyGridManager.initialize();
+    console.log("PropertyGridManager initialized successfully.");
+
+    console.log("Starting MeasureTools...");
     await MeasureTools.startup();
+    console.log("MeasureTools started successfully.");
+
+    console.log("Setting default MeasurementActionToolbar action...");
     MeasurementActionToolbar.setDefaultActionProvider();
-  }, []);
+    console.log("MeasurementActionToolbar default action set.");
+  } catch (error) {
+    console.error("Error during iModelApp initialization:", error);
+  }
+}, []);
 
   return (
     <div className="viewer-container">
