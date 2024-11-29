@@ -1,7 +1,8 @@
 import "./App.scss";
 
 import type { ScreenViewport } from "@itwin/core-frontend";
-import { FitViewTool, IModelApp, StandardViewId, Marker, DecorateContext } from "@itwin/core-frontend";
+import { FitViewTool, IModelApp, StandardViewId, Marker, DecorateContext, MapLayerOptions } from "@itwin/core-frontend";
+import { Point3d } from "@itwin/core-geometry";
 import { FillCentered } from "@itwin/core-react";
 import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
 import { ProgressLinear } from "@itwin/itwinui-react";
@@ -33,7 +34,6 @@ import {
 } from "@itwin/web-viewer-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
-import { Point3d } from "@itwin/core-frontend";
 import { Auth } from "./Auth";
 import { history } from "./history";
 import { getSchemaContext, unifiedSelectionStorage } from "./selectionStorage";
@@ -106,8 +106,7 @@ const App: React.FC = () => {
   const accessToken = useAccessToken();
   const authClient = Auth.getClient();
 
-  // Mapbox Layer Options
-  const mapLayerOptions = useMemo(() => ({
+  const mapLayerOptions: MapLayerOptions = useMemo(() => ({
     MapboxImagery: {
       key: "access_token", 
       value: process.env.REACT_APP_MAPBOX_ACCESS_TOKEN!
@@ -149,12 +148,15 @@ const App: React.FC = () => {
   const viewCreatorOptions = useMemo(() => {
     return {
       viewportConfigurer: (vp: ScreenViewport) => {
-        // Add Mapbox Layer
-        vp.addMapLayer({
-          type: "MapboxImageryProvider",
-          url: "mapbox://styles/roeblinglabs/cm42013md00lm01s303u90r3o",
-          transparentBackground: false
-        }, mapLayerOptions);
+        const viewState = vp.view;
+        viewState.attachMapLayer(
+          {
+            type: "MapboxImageryProvider", 
+            url: "mapbox://styles/roeblinglabs/cm42013md00lm01s303u90r3o",
+            transparentBackground: false
+          },
+          mapLayerOptions
+        );
 
         class MarkerDecorator {
           private videoMarkers: Marker[];
