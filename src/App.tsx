@@ -80,9 +80,14 @@ const App: React.FC = () => {
       return;
     }
 
-    // Set Cesium Ion Token for TileAdmin
-    TileAdmin.Props.cesiumIonKey = cesiumIonToken;
-    console.log("Cesium Terrain configured.");
+    // Set Cesium Ion Key in TileAdmin
+    const tileAdmin = IModelApp.tileAdmin;
+    if (tileAdmin) {
+      tileAdmin.cesiumIonKey = cesiumIonToken;
+      console.log("Cesium Terrain configured.");
+    } else {
+      console.error("TileAdmin is not initialized.");
+    }
   }, [cesiumIonToken]);
 
   useEffect(() => {
