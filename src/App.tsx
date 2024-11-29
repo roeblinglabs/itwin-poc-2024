@@ -2,43 +2,20 @@ import "./App.scss";
 
 import type { ScreenViewport } from "@itwin/core-frontend";
 import {
-  FitViewTool,
   IModelApp,
   StandardViewId,
   Marker,
   DecorateContext,
+  MapLayerSettings,
 } from "@itwin/core-frontend";
 import { FillCentered } from "@itwin/core-react";
-import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
 import { ProgressLinear } from "@itwin/itwinui-react";
-import {
-  MeasurementActionToolbar,
-  MeasureTools,
-  MeasureToolsUiItemsProvider,
-} from "@itwin/measure-tools-react";
-import {
-  AncestorsNavigationControls,
-  CopyPropertyTextContextMenuItem,
-  PropertyGridManager,
-  PropertyGridUiItemsProvider,
-  ShowHideNullValuesSettingsMenuItem,
-} from "@itwin/property-grid-react";
-import {
-  CategoriesTreeComponent,
-  createTreeWidget,
-  ModelsTreeComponent,
-  TreeWidget,
-} from "@itwin/tree-widget-react";
-import {
-  useAccessToken,
-  Viewer,
-} from "@itwin/web-viewer-react";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Viewer } from "@itwin/web-viewer-react";
+import React, { useCallback, useEffect, useState } from "react";
 
 import { Point3d } from "@itwin/core-geometry";
 import { Auth } from "./Auth";
 import { history } from "./history";
-import { MapLayerSource } from "@itwin/core-common";
 
 export class VideoCameraMarker extends Marker {
   constructor(location: Point3d, size: { x: number; y: number }, label: string, onClick: () => void) {
@@ -67,20 +44,7 @@ const App: React.FC = () => {
   );
   const [showVideo, setShowVideo] = useState(false); // New state to control video display
 
-  const accessToken = useAccessToken();
-  const authClient = Auth.getClient();
-
-  const login = useCallback(async () => {
-    try {
-      await authClient.signInSilent();
-    } catch {
-      await authClient.signIn();
-    }
-  }, [authClient]);
-
-  useEffect(() => {
-    void login();
-  }, [login]);
+  const accessToken = Auth.getClient().getAccessToken();
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -103,29 +67,24 @@ const App: React.FC = () => {
   }, [iTwinId, iModelId, changesetId]);
 
   const onIModelAppInit = useCallback(async () => {
-    await TreeWidget.initialize();
-    await PropertyGridManager.initialize();
-    await MeasureTools.startup();
-    MeasurementActionToolbar.setDefaultActionProvider();
-
-    // Add Mapbox layer
     const mapboxLayerProps = {
       url: "mapbox://styles/roeblinglabs/cm42013md00lm01s303u90r3o",
       name: "Mapbox Layer",
       formatId: "MapboxImagery",
-      accessKey: "pk.eyJ1Ijoicm9lYmxpbmdsYWJzIiwiYSI6ImNtNDF6a3FmczA0b3YyanE3ejA5c2RyM3gifQ.9RM7bx6kAHX0Ivjmo-Dc6A",
+      accessKey: process.env.REACT_APP_MAPBOX_ACCESS_TOKEN,
     };
 
-    const mapLayerSource: MapLayerSource = {
-      name: mapboxLayerProps.name,
-      url: mapboxLayerProps.url,
+    const mapLayerSettings = MapLayerSettings.fromJSON({
       formatId: mapboxLayerProps.formatId,
-      accessKey: mapboxLayerProps.accessKey,
-    };
-
-    IModelApp.viewManager.getViewports().forEach((vp) => {
-      vp.displayStyle.attachMapLayer(mapLayerSource);
+      url: mapboxLayerProps.url,
+      name: mapboxLayerProps.name,
     });
+
+    if (mapLayerSettings) {
+      IModelApp.viewManager.forEachViewport((vp) => {
+        vp.displayStyle.attachMapLayerSettings(mapLayerSettings);
+      });
+    }
   }, []);
 
   return (
@@ -157,7 +116,7 @@ const App: React.FC = () => {
         iTwinId={iTwinId ?? ""}
         iModelId={iModelId ?? ""}
         changeSetId={changesetId}
-        authClient={authClient}
+        authClient={Auth.getClient()}
         onIModelAppInit={onIModelAppInit}
       />
     </div>
