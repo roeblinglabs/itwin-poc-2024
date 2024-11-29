@@ -6,6 +6,7 @@ import {
   Marker,
   DecorateContext,
   TileAdmin,
+  TileAdminProps,
 } from "@itwin/core-frontend";
 import { FillCentered } from "@itwin/core-react";
 import { ProgressLinear } from "@itwin/itwinui-react";
@@ -45,7 +46,6 @@ const App: React.FC = () => {
   const accessToken = useAccessToken();
   const authClient = Auth.getClient();
 
-  // Retrieve Cesium Ion Token
   const cesiumIonToken: string = process.env.CESIUM_ION_TOKEN ?? "";
 
   const login = useCallback(async () => {
@@ -73,26 +73,15 @@ const App: React.FC = () => {
     }
   }, []);
 
-  // Configure Cesium Terrain
-  const configureCesiumTerrain = useCallback(() => {
-    if (!cesiumIonToken) {
-      console.error("Cesium Ion Token is missing.");
-      return;
-    }
+  const onIModelAppInit = useCallback(async () => {
+    const tileAdminProps: TileAdminProps = {
+      cesiumIonKey: cesiumIonToken,
+    };
 
-    // Set Cesium Ion Key in TileAdmin
-    const tileAdmin = IModelApp.tileAdmin;
-    if (tileAdmin) {
-      tileAdmin.cesiumIonKey = cesiumIonToken;
-      console.log("Cesium Terrain configured.");
-    } else {
-      console.error("TileAdmin is not initialized.");
-    }
+    IModelApp.startup({ tileAdmin: TileAdmin.create(tileAdminProps) });
+
+    console.log("Cesium Terrain configured.");
   }, [cesiumIonToken]);
-
-  useEffect(() => {
-    configureCesiumTerrain();
-  }, [configureCesiumTerrain]);
 
   return (
     <div className="viewer-container">
@@ -125,10 +114,11 @@ const App: React.FC = () => {
         changeSetId={changesetId}
         authClient={authClient}
         enablePerformanceMonitors={true}
-        onIModelAppInit={() => console.log("iModelApp initialized.")}
+        onIModelAppInit={onIModelAppInit}
       />
     </div>
   );
 };
 
 export default App;
+
