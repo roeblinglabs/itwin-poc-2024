@@ -42,7 +42,7 @@ export class VideoCameraMarker extends Marker {
   constructor(location: Point3d, size: { x: number; y: number }, label: string, onClick: () => void) {
     super(location, size);
 
-    this.title = Video Camera: ${label};
+    this.title = `Video Camera: ${label}`;
     this.setImageUrl("/images/icons8-video-camera-64.png");
     this.label = label;
     this.labelOffset = { x: 0, y: 30 };
@@ -61,7 +61,7 @@ export class DisplacementSensorMarker extends Marker {
   constructor(location: Point3d, size: { x: number; y: number }, label: string, onClick: () => void) {
     super(location, size);
 
-    this.title = Displacement Sensor: ${label};
+    this.title = `Displacement Sensor: ${label}`;
     this.setImageUrl("/images/icons8-sensor-96.png");
     this.label = label;
     this.labelOffset = { x: 0, y: 30 };
@@ -80,7 +80,7 @@ export class MicroscopeMarker extends Marker {
   constructor(location: Point3d, size: { x: number; y: number }, label: string, onClick: () => void) {
     super(location, size);
 
-    this.title = Microscope: ${label};
+    this.title = `Microscope: ${label}`;
     this.setImageUrl("/images/icons8-microscope-64.png");
     this.label = label;
     this.labelOffset = { x: 0, y: 30 };
@@ -132,9 +132,9 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    let url = viewer?iTwinId=${iTwinId};
-    if (iModelId) url = ${url}&iModelId=${iModelId};
-    if (changesetId) url = ${url}&changesetId=${changesetId};
+    let url = `viewer?iTwinId=${iTwinId}`;
+    if (iModelId) url = `${url}&iModelId=${iModelId}`;
+    if (changesetId) url = `${url}&changesetId=${changesetId}`;
     history.push(url);
   }, [iTwinId, iModelId, changesetId]);
 
