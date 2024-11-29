@@ -6,6 +6,7 @@
   "dependencies": {
     "@bentley/icons-generic": "^1.0.34",
     "@bentley/react-scripts": "^5.0.7",
+    "cesium": "^1.107.0",
     "@itwin/appui-abstract": "^4.10.1",
     "@itwin/appui-layout-react": "^4.8.3",
     "@itwin/appui-react": "^4.17.5",
