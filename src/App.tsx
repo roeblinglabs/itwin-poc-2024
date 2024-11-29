@@ -3,48 +3,19 @@ import "./App.scss";
 import type { ScreenViewport } from "@itwin/core-frontend";
 import {
   IModelApp,
-  TileAdmin,
-  FitViewTool,
-  StandardViewId,
   Marker,
   DecorateContext,
+  TileAdmin,
 } from "@itwin/core-frontend";
-import Cesium from "cesium";
 import { FillCentered } from "@itwin/core-react";
-import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
 import { ProgressLinear } from "@itwin/itwinui-react";
-import {
-  MeasurementActionToolbar,
-  MeasureTools,
-  MeasureToolsUiItemsProvider,
-} from "@itwin/measure-tools-react";
-import {
-  AncestorsNavigationControls,
-  CopyPropertyTextContextMenuItem,
-  PropertyGridManager,
-  PropertyGridUiItemsProvider,
-  ShowHideNullValuesSettingsMenuItem,
-} from "@itwin/property-grid-react";
-import {
-  CategoriesTreeComponent,
-  createTreeWidget,
-  ModelsTreeComponent,
-  TreeWidget,
-} from "@itwin/tree-widget-react";
 import {
   useAccessToken,
   Viewer,
-  ViewerContentToolsProvider,
-  ViewerNavigationToolsProvider,
-  ViewerPerformance,
-  ViewerStatusbarItemsProvider,
 } from "@itwin/web-viewer-react";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-
+import React, { useCallback, useEffect, useState } from "react";
 import { Point3d } from "@itwin/core-geometry";
 import { Auth } from "./Auth";
-import { history } from "./history";
-import { getSchemaContext, unifiedSelectionStorage } from "./selectionStorage";
 
 export class VideoCameraMarker extends Marker {
   constructor(location: Point3d, size: { x: number; y: number }, label: string, onClick: () => void) {
@@ -68,13 +39,14 @@ export class VideoCameraMarker extends Marker {
 const App: React.FC = () => {
   const [iModelId, setIModelId] = useState(process.env.IMJS_IMODEL_ID);
   const [iTwinId, setITwinId] = useState(process.env.IMJS_ITWIN_ID);
-  const [changesetId, setChangesetId] = useState(
-    process.env.IMJS_AUTH_CLIENT_CHANGESET_ID
-  );
-  const [showVideo, setShowVideo] = useState(false); // New state to control video display
+  const [changesetId, setChangesetId] = useState(process.env.IMJS_AUTH_CLIENT_CHANGESET_ID);
+  const [showVideo, setShowVideo] = useState(false);
 
   const accessToken = useAccessToken();
   const authClient = Auth.getClient();
+
+  // Retrieve Cesium Ion Token
+  const cesiumIonToken: string = process.env.CESIUM_ION_TOKEN ?? "";
 
   const login = useCallback(async () => {
     try {
@@ -101,27 +73,21 @@ const App: React.FC = () => {
     }
   }, []);
 
+  // Configure Cesium Terrain
+  const configureCesiumTerrain = useCallback(() => {
+    if (!cesiumIonToken) {
+      console.error("Cesium Ion Token is missing.");
+      return;
+    }
+
+    // Set Cesium Ion Token for TileAdmin
+    TileAdmin.Props.cesiumIonKey = cesiumIonToken;
+    console.log("Cesium Terrain configured.");
+  }, [cesiumIonToken]);
+
   useEffect(() => {
-    let url = `viewer?iTwinId=${iTwinId}`;
-    if (iModelId) url = `${url}&iModelId=${iModelId}`;
-    if (changesetId) url = `${url}&changesetId=${changesetId}`;
-    history.push(url);
-  }, [iTwinId, iModelId, changesetId]);
-
-  const onIModelAppInit = useCallback(async () => {
-    Cesium.Ion.defaultAccessToken = process.env.CESIUM_ION_TOKEN;
-
-    // Configure TileAdmin for Cesium terrain
-    IModelApp.tileAdmin = TileAdmin.create({
-      cesiumIonKey: process.env.CESIUM_ION_TOKEN,
-      useCesiumIonTerrain: true,
-    });
-
-    await TreeWidget.initialize();
-    await PropertyGridManager.initialize();
-    await MeasureTools.startup();
-    MeasurementActionToolbar.setDefaultActionProvider();
-  }, []);
+    configureCesiumTerrain();
+  }, [configureCesiumTerrain]);
 
   return (
     <div className="viewer-container">
@@ -153,7 +119,8 @@ const App: React.FC = () => {
         iModelId={iModelId ?? ""}
         changeSetId={changesetId}
         authClient={authClient}
-        onIModelAppInit={onIModelAppInit}
+        enablePerformanceMonitors={true}
+        onIModelAppInit={() => console.log("iModelApp initialized.")}
       />
     </div>
   );
