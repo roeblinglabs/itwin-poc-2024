@@ -1,8 +1,7 @@
 import "./App.scss";
 
 import type { ScreenViewport } from "@itwin/core-frontend";
-import { FitViewTool, IModelApp, StandardViewId, Marker, DecorateContext, MapLayerOptions } from "@itwin/core-frontend";
-import { Point3d } from "@itwin/core-geometry";
+import { FitViewTool, IModelApp, StandardViewId, Marker, DecorateContext } from "@itwin/core-frontend";
 import { FillCentered } from "@itwin/core-react";
 import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
 import { ProgressLinear } from "@itwin/itwinui-react";
@@ -34,6 +33,7 @@ import {
 } from "@itwin/web-viewer-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
+import { Point3d } from "@itwin/core-geometry";
 import { Auth } from "./Auth";
 import { history } from "./history";
 import { getSchemaContext, unifiedSelectionStorage } from "./selectionStorage";
@@ -49,7 +49,7 @@ export class VideoCameraMarker extends Marker {
 
     this.onMouseButton = (ev) => {
       if (ev.button === 0) {
-        onClick();
+        onClick(); // Call the provided onClick function
         return true;
       }
       return false;
@@ -68,7 +68,7 @@ export class DisplacementSensorMarker extends Marker {
 
     this.onMouseButton = (ev) => {
       if (ev.button === 0) {
-        onClick();
+        onClick(); // Call the provided onClick function
         return true;
       }
       return false;
@@ -87,7 +87,7 @@ export class MicroscopeMarker extends Marker {
 
     this.onMouseButton = (ev) => {
       if (ev.button === 0) {
-        onClick();
+        onClick(); // Call the provided onClick function
         return true;
       }
       return false;
@@ -101,17 +101,10 @@ const App: React.FC = () => {
   const [changesetId, setChangesetId] = useState(
     process.env.IMJS_AUTH_CLIENT_CHANGESET_ID
   );
-  const [showVideo, setShowVideo] = useState(false);
+  const [showVideo, setShowVideo] = useState(false); // New state to control video display
 
   const accessToken = useAccessToken();
   const authClient = Auth.getClient();
-
-  const mapLayerOptions: MapLayerOptions = useMemo(() => ({
-    MapboxImagery: {
-      key: "access_token", 
-      value: process.env.REACT_APP_MAPBOX_ACCESS_TOKEN!
-    }
-  }), []);
 
   const login = useCallback(async () => {
     try {
@@ -148,16 +141,6 @@ const App: React.FC = () => {
   const viewCreatorOptions = useMemo(() => {
     return {
       viewportConfigurer: (vp: ScreenViewport) => {
-        const viewState = vp.view;
-        viewState.attachMapLayer(
-          {
-            type: "MapboxImageryProvider", 
-            url: "mapbox://styles/roeblinglabs/cm42013md00lm01s303u90r3o",
-            transparentBackground: false
-          },
-          mapLayerOptions
-        );
-
         class MarkerDecorator {
           private videoMarkers: Marker[];
           private displacementMarkers: Marker[];
@@ -195,7 +178,7 @@ const App: React.FC = () => {
         IModelApp.viewManager.addDecorator(markerDecorator);
       },
     };
-  }, [mapLayerOptions]);
+  }, []);
 
   const onIModelAppInit = useCallback(async () => {
     await TreeWidget.initialize();
