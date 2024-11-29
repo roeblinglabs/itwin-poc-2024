@@ -98,6 +98,7 @@ export class MicroscopeMarker extends Marker {
 const App: React.FC = () => {
   const [iModelId, setIModelId] = useState(process.env.IMJS_IMODEL_ID);
   const [iTwinId, setITwinId] = useState(process.env.IMJS_ITWIN_ID);
+  const cesiumIonToken: string = process.env.CESIUM_ION_TOKEN ?? "";
   const [changesetId, setChangesetId] = useState(
     process.env.IMJS_AUTH_CLIENT_CHANGESET_ID
   );
@@ -181,6 +182,8 @@ const App: React.FC = () => {
   }, []);
 
   const onIModelAppInit = useCallback(async () => {
+    IModelApp.tileAdmin.cesiumIonKey = cesiumIonToken;
+    await IModelApp.startup();
     await TreeWidget.initialize();
     await PropertyGridManager.initialize();
     await MeasureTools.startup();
