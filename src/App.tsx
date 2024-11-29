@@ -33,7 +33,7 @@ import {
 } from "@itwin/web-viewer-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
-import { Point3d } from "@itwin/core-geometry";
+import { Point3d } from "@itwin/core-frontend";
 import { Auth } from "./Auth";
 import { history } from "./history";
 import { getSchemaContext, unifiedSelectionStorage } from "./selectionStorage";
@@ -49,7 +49,7 @@ export class VideoCameraMarker extends Marker {
 
     this.onMouseButton = (ev) => {
       if (ev.button === 0) {
-        onClick(); // Call the provided onClick function
+        onClick();
         return true;
       }
       return false;
@@ -68,7 +68,7 @@ export class DisplacementSensorMarker extends Marker {
 
     this.onMouseButton = (ev) => {
       if (ev.button === 0) {
-        onClick(); // Call the provided onClick function
+        onClick();
         return true;
       }
       return false;
@@ -87,7 +87,7 @@ export class MicroscopeMarker extends Marker {
 
     this.onMouseButton = (ev) => {
       if (ev.button === 0) {
-        onClick(); // Call the provided onClick function
+        onClick();
         return true;
       }
       return false;
@@ -101,10 +101,18 @@ const App: React.FC = () => {
   const [changesetId, setChangesetId] = useState(
     process.env.IMJS_AUTH_CLIENT_CHANGESET_ID
   );
-  const [showVideo, setShowVideo] = useState(false); // New state to control video display
+  const [showVideo, setShowVideo] = useState(false);
 
   const accessToken = useAccessToken();
   const authClient = Auth.getClient();
+
+  // Mapbox Layer Options
+  const mapLayerOptions = useMemo(() => ({
+    MapboxImagery: {
+      key: "access_token", 
+      value: process.env.REACT_APP_MAPBOX_ACCESS_TOKEN!
+    }
+  }), []);
 
   const login = useCallback(async () => {
     try {
@@ -141,6 +149,13 @@ const App: React.FC = () => {
   const viewCreatorOptions = useMemo(() => {
     return {
       viewportConfigurer: (vp: ScreenViewport) => {
+        // Add Mapbox Layer
+        vp.addMapLayer({
+          type: "MapboxImageryProvider",
+          url: "mapbox://styles/roeblinglabs/cm42013md00lm01s303u90r3o",
+          transparentBackground: false
+        }, mapLayerOptions);
+
         class MarkerDecorator {
           private videoMarkers: Marker[];
           private displacementMarkers: Marker[];
@@ -178,7 +193,7 @@ const App: React.FC = () => {
         IModelApp.viewManager.addDecorator(markerDecorator);
       },
     };
-  }, []);
+  }, [mapLayerOptions]);
 
   const onIModelAppInit = useCallback(async () => {
     await TreeWidget.initialize();
