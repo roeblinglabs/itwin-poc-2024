@@ -7,7 +7,6 @@ import {
   StandardViewId,
   Marker,
   DecorateContext,
-  MapLayerSettingsService,
 } from "@itwin/core-frontend";
 import { FillCentered } from "@itwin/core-react";
 import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
@@ -33,17 +32,13 @@ import {
 import {
   useAccessToken,
   Viewer,
-  ViewerContentToolsProvider,
-  ViewerNavigationToolsProvider,
-  ViewerPerformance,
-  ViewerStatusbarItemsProvider,
 } from "@itwin/web-viewer-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Point3d } from "@itwin/core-geometry";
 import { Auth } from "./Auth";
 import { history } from "./history";
-import { getSchemaContext, unifiedSelectionStorage } from "./selectionStorage";
+import { MapLayerSource } from "@itwin/core-common";
 
 export class VideoCameraMarker extends Marker {
   constructor(location: Point3d, size: { x: number; y: number }, label: string, onClick: () => void) {
@@ -121,18 +116,16 @@ const App: React.FC = () => {
       accessKey: "pk.eyJ1Ijoicm9lYmxpbmdsYWJzIiwiYSI6ImNtNDF6a3FmczA0b3YyanE3ejA5c2RyM3gifQ.9RM7bx6kAHX0Ivjmo-Dc6A",
     };
 
-    const mapLayerSettings = await MapLayerSettingsService.createSettings(
-      mapboxLayerProps.name,
-      mapboxLayerProps.url,
-      mapboxLayerProps.formatId,
-      mapboxLayerProps.accessKey
-    );
+    const mapLayerSource: MapLayerSource = {
+      name: mapboxLayerProps.name,
+      url: mapboxLayerProps.url,
+      formatId: mapboxLayerProps.formatId,
+      accessKey: mapboxLayerProps.accessKey,
+    };
 
-    if (mapLayerSettings) {
-      IModelApp.viewManager.forEachViewport((vp) => {
-        vp.displayStyle.attachMapLayer(mapLayerSettings);
-      });
-    }
+    IModelApp.viewManager.getViewports().forEach((vp) => {
+      vp.displayStyle.attachMapLayer(mapLayerSource);
+    });
   }, []);
 
   return (
