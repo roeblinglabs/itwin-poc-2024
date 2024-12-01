@@ -176,7 +176,8 @@ const App: React.FC = () => {
         //  new MicroscopeMarker(new Point3d(20, 10, 15), { x: 40, y: 40 }, "Microscope 1", () => setShowVideo(true)),
         // ]; Commenting out microscopeMarkers because they are unused for now.
 
-        const markerDecorator = new MarkerDecorator(videoCameraMarkers, displacementMarkers, microscopeMarkers);
+        // const markerDecorator = new MarkerDecorator(videoCameraMarkers, displacementMarkers, microscopeMarkers);
+        const markerDecorator = new MarkerDecorator(displacementMarkers);
         IModelApp.viewManager.addDecorator(markerDecorator);
       },
     };
