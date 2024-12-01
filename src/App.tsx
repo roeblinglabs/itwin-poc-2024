@@ -222,7 +222,7 @@ const App: React.FC = () => {
         viewCreatorOptions={viewCreatorOptions}
         enablePerformanceMonitors={true}
         onIModelAppInit={onIModelAppInit}
-        mapLayerOptions={MapboxImagery: { key: "access_token", value: MapboxKey}}
+        mapLayerOptions={{ MapboxImagery: { key: "access_token", value: MapboxKey } }}
         tileAdmin = { {cesiumIonKey: CesiumKey } }
       />
     </div>
