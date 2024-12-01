@@ -4,6 +4,7 @@
   "private": true,
   "homepage": "/",
   "dependencies": {
+    "@bentley/frontend-devtools": "^2.19.0"
     "@bentley/icons-generic": "^1.0.34",
     "@bentley/react-scripts": "^5.0.7",
     "@itwin/appui-abstract": "^4.10.1",
