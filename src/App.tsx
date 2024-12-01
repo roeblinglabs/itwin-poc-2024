@@ -98,6 +98,8 @@ export class MicroscopeMarker extends Marker {
 const App: React.FC = () => {
   const [iModelId, setIModelId] = useState(process.env.IMJS_IMODEL_ID);
   const [iTwinId, setITwinId] = useState(process.env.IMJS_ITWIN_ID);
+  const [MapboxKey] = useState(process.env.IMJS_MAPBOX_MAPS_KEY ?? "");
+  const [CesiumKey] = useState(process.env.IMJS_CESIUM_ION_KEY ?? "");
   const [changesetId, setChangesetId] = useState(
     process.env.IMJS_AUTH_CLIENT_CHANGESET_ID
   );
@@ -220,6 +222,8 @@ const App: React.FC = () => {
         viewCreatorOptions={viewCreatorOptions}
         enablePerformanceMonitors={true}
         onIModelAppInit={onIModelAppInit}
+        mapLayerOptions={MapboxImagery: { key: "access_token", value: MapboxKey}}
+        tileAdmin = { {cesiumIonKey: CesiumKey } }
       />
     </div>
   );
