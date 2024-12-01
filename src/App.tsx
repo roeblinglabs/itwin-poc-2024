@@ -161,20 +161,20 @@ const App: React.FC = () => {
           }
         }
 
-        const videoCameraMarkers = [
-          new VideoCameraMarker(new Point3d(-10, 20, 5), { x: 40, y: 40 }, "Shore Camera 1", () => setShowVideo(true)),
-          new VideoCameraMarker(new Point3d(-15, 25, 5), { x: 40, y: 40 }, "Shore Camera 2", () => setShowVideo(true)),
-        ];
+        // const videoCameraMarkers = [
+          // new VideoCameraMarker(new Point3d(-10, 20, 5), { x: 40, y: 40 }, "Shore Camera 1", () => setShowVideo(true)),
+          // new VideoCameraMarker(new Point3d(-15, 25, 5), { x: 40, y: 40 }, "Shore Camera 2", () => setShowVideo(true)),
+        // ]; Commenting out VideoCameraMarker because they are unused for now.
 
         const displacementMarkers = [
-          new DisplacementSensorMarker(new Point3d(0, 0, 10), { x: 40, y: 40 }, "Bridge Girder 1", () => setShowVideo(true)),
-          new DisplacementSensorMarker(new Point3d(5, 0, 10), { x: 40, y: 40 }, "Bridge Girder 2", () => setShowVideo(true)),
-          new DisplacementSensorMarker(new Point3d(10, 0, 10), { x: 40, y: 40 }, "Bridge Girder 3", () => setShowVideo(true)),
+          new DisplacementSensorMarker(new Point3d(0, 0, 10), { x: 40, y: 40 }, "Virtual Sensor 1", () => setShowVideo(true)),
+          new DisplacementSensorMarker(new Point3d(5, 0, 10), { x: 40, y: 40 }, "Virtual Sensor 2", () => setShowVideo(true)),
+          new DisplacementSensorMarker(new Point3d(10, 0, 10), { x: 40, y: 40 }, "Virtual Sensor 3", () => setShowVideo(true)),
         ];
 
-        const microscopeMarkers = [
-          new MicroscopeMarker(new Point3d(20, 10, 15), { x: 40, y: 40 }, "Microscope 1", () => setShowVideo(true)),
-        ];
+        // const microscopeMarkers = [
+        //  new MicroscopeMarker(new Point3d(20, 10, 15), { x: 40, y: 40 }, "Microscope 1", () => setShowVideo(true)),
+        // ]; Commenting out microscopeMarkers because they are unused for now.
 
         const markerDecorator = new MarkerDecorator(videoCameraMarkers, displacementMarkers, microscopeMarkers);
         IModelApp.viewManager.addDecorator(markerDecorator);
