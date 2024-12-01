@@ -110,12 +110,12 @@ const App: React.FC = () => {
         
       },
     };
-  }, []);
+  }, [CesiumKey]);
 
   const onIModelAppInit = useCallback(async () => {
     await MeasureTools.startup();
     MeasurementActionToolbar.setDefaultActionProvider();
-  }, [CesiumKey]);
+  }, []);
 
   return (
     <div className="viewer-container">
