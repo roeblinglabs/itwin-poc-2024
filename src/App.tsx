@@ -1,50 +1,55 @@
 import "./App.scss";
 
 import type { ScreenViewport } from "@itwin/core-frontend";
-import { FitViewTool, IModelApp, StandardViewId, Marker, DecorateContext } from "@itwin/core-frontend";
+import {
+  FitViewTool,
+  IModelApp,
+  StandardViewId,
+  Marker,
+  DecorateContext,
+  TileAdmin,
+} from "@itwin/core-frontend";
 import { FillCentered } from "@itwin/core-react";
-import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
 import { ProgressLinear } from "@itwin/itwinui-react";
 import {
   MeasurementActionToolbar,
   MeasureTools,
-  MeasureToolsUiItemsProvider,
 } from "@itwin/measure-tools-react";
-import {
-  AncestorsNavigationControls,
-  CopyPropertyTextContextMenuItem,
-  PropertyGridManager,
-  PropertyGridUiItemsProvider,
-  ShowHideNullValuesSettingsMenuItem,
-} from "@itwin/property-grid-react";
-import {
-  CategoriesTreeComponent,
-  createTreeWidget,
-  ModelsTreeComponent,
-  TreeWidget,
-} from "@itwin/tree-widget-react";
 import {
   useAccessToken,
   Viewer,
-  ViewerContentToolsProvider,
-  ViewerNavigationToolsProvider,
-  ViewerPerformance,
-  ViewerStatusbarItemsProvider,
 } from "@itwin/web-viewer-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Point3d } from "@itwin/core-geometry";
 import { Auth } from "./Auth";
 import { history } from "./history";
-import { getSchemaContext, unifiedSelectionStorage } from "./selectionStorage";
+
+export class VideoCameraMarker extends Marker {
+  constructor(location: Point3d, size: { x: number; y: number }, label: string, onClick: () => void) {
+    super(location, size);
+
+    this.title = `Video Camera: ${label}`;
+    this.setImageUrl("/images/icons8-video-camera-64.png");
+    this.label = label;
+    this.labelOffset = { x: 0, y: 30 };
+
+    this.onMouseButton = (ev) => {
+      if (ev.button === 0) {
+        onClick();
+        return true;
+      }
+      return false;
+    };
+  }
+}
 
 const App: React.FC = () => {
   const [iModelId, setIModelId] = useState(process.env.IMJS_IMODEL_ID);
   const [iTwinId, setITwinId] = useState(process.env.IMJS_ITWIN_ID);
   const [MapboxKey] = useState(process.env.REACT_APP_IMJS_MAPBOX_MAPS_KEY ?? "");
   const [CesiumKey] = useState(process.env.REACT_APP_IMJS_CESIUM_ION_KEY ?? "");
-  const [changesetId, setChangesetId] = useState(process.env.IMJS_AUTH_CLIENT_CHANGESET_ID);
-  const [showVideo, setShowVideo] = useState(false); // New state to control video display
+  const [showVideo, setShowVideo] = useState(false);
 
   const accessToken = useAccessToken();
   const authClient = Auth.getClient();
@@ -69,47 +74,53 @@ const App: React.FC = () => {
     if (urlParams.has("iModelId")) {
       setIModelId(urlParams.get("iModelId") as string);
     }
-    if (urlParams.has("changesetId")) {
-      setChangesetId(urlParams.get("changesetId") as string);
-    }
   }, []);
 
   useEffect(() => {
     let url = `viewer?iTwinId=${iTwinId}`;
     if (iModelId) url = `${url}&iModelId=${iModelId}`;
-    if (changesetId) url = `${url}&changesetId=${changesetId}`;
     history.push(url);
-  }, [iTwinId, iModelId, changesetId]);
+  }, [iTwinId, iModelId]);
+
+  const onIModelAppInit = useCallback(async () => {
+    await MeasureTools.startup();
+    MeasurementActionToolbar.setDefaultActionProvider();
+
+    // Set Cesium Ion Key via TileAdmin.Props
+    TileAdmin.Props.cesiumIonKey = CesiumKey;
+  }, [CesiumKey]);
 
   const viewCreatorOptions = useMemo(() => {
     return {
       viewportConfigurer: (vp: ScreenViewport) => {
-        // Attach Mapbox map layer
-        if (MapboxKey) {
-          vp.displayStyle.attachMapLayer({
-            formatId: "MapboxImagery",
-            name: "Mapbox Layer",
-            url: `https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=${MapboxKey}`,
-          });
-        }
+        class MarkerDecorator {
+          private videoMarkers: Marker[];
 
-        // Enable Cesium terrain if CesiumKey is provided
-        if (CesiumKey) {
-          const tileAdmin = IModelApp.tileAdmin;
-          if (tileAdmin) {
-            tileAdmin.setCesiumIonKey(CesiumKey);
+          constructor(videoMarkers: Marker[]) {
+            this.videoMarkers = videoMarkers;
+          }
+
+          public decorate(context: DecorateContext): void {
+            this.videoMarkers.forEach((marker) => marker.addDecoration(context));
           }
         }
+
+        const videoCameraMarkers = [
+          new VideoCameraMarker(new Point3d(-10, 20, 5), { x: 40, y: 40 }, "Shore Camera 1", () => setShowVideo(true)),
+        ];
+
+        const markerDecorator = new MarkerDecorator(videoCameraMarkers);
+        IModelApp.viewManager.addDecorator(markerDecorator);
+
+        // Attach Mapbox Layer
+        vp.displayStyle.attachMapLayer({
+          formatId: "MapboxImagery",
+          name: "Mapbox Layer",
+          url: `https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${MapboxKey}`,
+        });
       },
     };
-  }, [MapboxKey, CesiumKey]);
-
-  const onIModelAppInit = useCallback(async () => {
-    await TreeWidget.initialize();
-    await PropertyGridManager.initialize();
-    await MeasureTools.startup();
-    MeasurementActionToolbar.setDefaultActionProvider();
-  }, []);
+  }, [MapboxKey]);
 
   return (
     <div className="viewer-container">
@@ -139,12 +150,11 @@ const App: React.FC = () => {
       <Viewer
         iTwinId={iTwinId ?? ""}
         iModelId={iModelId ?? ""}
-        changeSetId={changesetId}
         authClient={authClient}
         viewCreatorOptions={viewCreatorOptions}
-        enablePerformanceMonitors={true}
         onIModelAppInit={onIModelAppInit}
         mapLayerOptions={{ MapboxImagery: { key: "access_token", value: MapboxKey } }}
+        tileAdmin={{ cesiumIonKey: CesiumKey }}
       />
     </div>
   );
