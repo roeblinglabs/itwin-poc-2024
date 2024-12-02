@@ -84,7 +84,12 @@ const App: React.FC = () => {
 
   const viewCreatorOptions = useMemo(() => {
     return {
-      viewportConfigurer: (vp: ScreenViewport) => {
+      viewportConfigurer: async (vp: ScreenViewport) => {
+        vp.changeBackgroundMapProps({
+          applyTerrain: true,
+          nonLocatable: true,
+        });
+        
         class MarkerDecorator {
           private displacementMarkers: Marker[];
 
