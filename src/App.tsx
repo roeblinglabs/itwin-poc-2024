@@ -87,7 +87,7 @@ const App: React.FC = () => {
       viewportConfigurer: async (vp: ScreenViewport) => {
         vp.changeBackgroundMapProvider({
           name: "MapBoxProvider",
-          type: BackgrounMapType.Aerial,
+          type: BackgroundMapType.Aerial,
         });
         
         vp.changeBackgroundMapProps({
