@@ -20,6 +20,8 @@ import { Point3d } from "@itwin/core-geometry";
 import { Auth } from "./Auth";
 import { history } from "./history";
 
+import { BackgroundMapType } from "@itwin/core-common";
+
 export class DisplacementSensorMarker extends Marker {
   constructor(location: Point3d, size: { x: number; y: number }, label: string, onClick: () => void) {
     super(location, size);
