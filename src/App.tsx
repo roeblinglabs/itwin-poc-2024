@@ -105,12 +105,9 @@ const App: React.FC = () => {
 
         const markerDecorator = new MarkerDecorator(displacementMarkers);
         IModelApp.viewManager.addDecorator(markerDecorator);
-
-        if (CesiumKey) vp.displayStyle.setTerrainProvider("CesiumWorldTerrain");
-        
       },
     };
-  }, [CesiumKey]);
+  }, []);
 
   const onIModelAppInit = useCallback(async () => {
     await MeasureTools.startup();
