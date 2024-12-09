@@ -87,6 +87,7 @@ const App: React.FC = () => {
   const viewCreatorOptions = useMemo(() => {
     return {
       viewportConfigurer: async (vp: ScreenViewport) => {
+        // Configure background map
         vp.changeBackgroundMapProvider({
           name: "MapBoxProvider",
           type: BackgroundMapType.Aerial,
@@ -96,6 +97,24 @@ const App: React.FC = () => {
           applyTerrain: true,
           nonLocatable: true,
         });
+
+        // Filter for Bridge-Model-1.dwg
+        const modelSelectors = await vp.iModel.models.queryProps({});
+        console.log("Available models:", modelSelectors); // For debugging
+
+        const bridgeModel = modelSelectors.filter(
+          (model) => model.name === "Bridge-Model-1.dwg"
+        );
+
+        if (bridgeModel.length > 0) {
+          await vp.changeDisplayStyle({
+            modelSelector: {
+              models: bridgeModel.map((model) => ({ id: model.id })),
+            },
+          });
+        } else {
+          console.warn("Bridge-Model-1.dwg not found in the iModel");
+        }
         
         class MarkerDecorator {
           private displacementMarkers: Marker[];
