@@ -106,18 +106,26 @@ const bridgeModel = modelSelectors.filter(
   (model) => model.name === "Bridge-Model-1"
 );
 
+// Filter for Bridge-Model-1
+const modelSelectors = await vp.iModel.models.queryProps({});
+console.log("Available models:", modelSelectors.map(model => ({ name: model.name, id: model.id })));
+
+const bridgeModel = modelSelectors.filter(
+  (model) => model.name === "Bridge-Model-1"
+);
+
 if (bridgeModel.length > 0) {
-  // Get all model ids
-  const allModelIds = modelSelectors.map(model => model.id);
+  const viewFlags = vp.viewFlags.clone();
+  const categories = await vp.iModel.categories.queryProps({});
+  const excludedCategories = categories.filter(category => 
+    !bridgeModel.some(model => model.id === category.model.id)
+  );
   
-  // Create an array where all models are hidden except Bridge-Model-1
-  const modelVisibility = new Map<string, boolean>();
-  allModelIds.forEach(id => {
-    modelVisibility.set(id, bridgeModel.some(model => model.id === id));
+  excludedCategories.forEach(category => {
+    viewFlags.setCategory(category.id, false);
   });
   
-  // Update model display
-  vp.setModelsDisplay(modelVisibility);
+  vp.viewFlags = viewFlags;
   console.log("Successfully filtered for Bridge-Model-1");
 } else {
   console.warn("Bridge-Model-1 not found in the iModel");
