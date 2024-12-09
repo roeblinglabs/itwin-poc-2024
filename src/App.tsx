@@ -107,16 +107,18 @@ const bridgeModel = modelSelectors.filter(
 );
 
 if (bridgeModel.length > 0) {
-  // Get current view definition
-  const view = vp.view;
+  // Get current view state
+  const viewState = vp.view;
   
-  // Create a model selector to only show the bridge model
-  const displayStyle = view.displayStyle;
-  displayStyle.setModelSelector({
-    modelIds: [bridgeModel[0].id],
-  });
+  // Update the model visibility using the display style settings
+  const settings = viewState.displayStyle.settings;
+  settings.hiddenElements = new Set(
+    modelSelectors
+      .filter(model => !bridgeModel.some(bridge => bridge.id === model.id))
+      .map(model => model.id)
+  );
   
-  // Update the view
+  // Force viewport update
   vp.invalidateScene();
   
   console.log("Successfully filtered for Bridge-Model-1");
