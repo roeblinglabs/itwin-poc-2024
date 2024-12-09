@@ -107,18 +107,22 @@ const bridgeModel = modelSelectors.filter(
 );
 
 if (bridgeModel.length > 0) {
-  // Try using the IModelApp API to control visibility
-  if (IModelApp.viewManager) {
-    const view = vp.view;
-    const provider = IModelApp.viewManager.frameVisibilityProvider;
-    
-    if (provider) {
-      // Hide all models except Bridge-Model-1
-      provider.hideAll();
-      provider.showOnly([bridgeModel[0].id]);
-      vp.invalidateScene();
-    }
-  }
+  // Get current view
+  const view = vp.view;
+  
+  // Update the display style to only show the bridge model
+  const displayStyle = view.displayStyle;
+  const settings = displayStyle.settings;
+  
+  // Set the model selector to only include Bridge-Model-1
+  const modelSelectorProps = {
+    models: bridgeModel.map(model => ({ id: model.id })),
+  };
+  
+  settings.applyActiveModelSelector(modelSelectorProps);
+  
+  // Force view update
+  vp.invalidateScene();
   
   console.log("Successfully filtered for Bridge-Model-1");
 } else {
