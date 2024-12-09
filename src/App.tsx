@@ -107,17 +107,17 @@ const bridgeModel = modelSelectors.filter(
 );
 
 if (bridgeModel.length > 0) {
-  const viewFlags = vp.viewFlags.clone();
-  const categories = await vp.iModel.categories.queryProps({});
-  const excludedCategories = categories.filter(category => 
-    !bridgeModel.some(model => model.id === category.model.id)
-  );
+  // Get the view definition
+  const viewDefinition = vp.view;
   
-  excludedCategories.forEach(category => {
-    viewFlags.setCategory(category.id, false);
-  });
+  // Create a model selector that only includes the bridge model
+  const modelSelector = { 
+    models: bridgeModel.map(model => ({ id: model.id }))
+  };
   
-  vp.viewFlags = viewFlags;
+  // Update the display style
+  viewDefinition.displayStyle.settings.modelSelector = modelSelector;
+  
   console.log("Successfully filtered for Bridge-Model-1");
 } else {
   console.warn("Bridge-Model-1 not found in the iModel");
