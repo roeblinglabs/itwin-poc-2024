@@ -98,22 +98,23 @@ const App: React.FC = () => {
           nonLocatable: true,
         });
 
-      // Filter for Bridge-Model-1
-      const modelSelectors = await vp.iModel.models.queryProps({});
-      console.log("Available models:", modelSelectors.map(model => ({ name: model.name, id: model.id })));
+    // Filter for Bridge-Model-1
+const modelSelectors = await vp.iModel.models.queryProps({});
+console.log("Available models:", modelSelectors.map(model => ({ name: model.name, id: model.id })));
 
-      const bridgeModel = modelSelectors.filter(
-        (model) => model.name === "Bridge-Model-1"
-      );
+const bridgeModel = modelSelectors.filter(
+  (model) => model.name === "Bridge-Model-1"
+);
 
-      if (bridgeModel.length > 0) {
-        vp.displayStyle.changeModelSelector({
-          models: bridgeModel.map((model) => ({ id: model.id })),
-        });
-        console.log("Successfully filtered for Bridge-Model-1");
-      } else {
-        console.warn("Bridge-Model-1 not found in the iModel");
-      }
+if (bridgeModel.length > 0) {
+  const style = vp.displayStyle.clone();
+  style.viewFlags = style.viewFlags.clone();
+  style.viewFlags.visibleModels = bridgeModel.map((model) => model.id);
+  vp.displayStyle = style;
+  console.log("Successfully filtered for Bridge-Model-1");
+} else {
+  console.warn("Bridge-Model-1 not found in the iModel");
+}
         
         class MarkerDecorator {
           private displacementMarkers: Marker[];
