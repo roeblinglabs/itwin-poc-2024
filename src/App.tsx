@@ -107,17 +107,15 @@ const bridgeModel = modelSelectors.filter(
 );
 
 if (bridgeModel.length > 0) {
-  // Get the view definition
-  const viewDefinition = vp.view;
+  const viewState = vp.view;
   
-  // Create a model selector that only includes the bridge model
-  const modelSelector = { 
-    models: bridgeModel.map(model => ({ id: model.id }))
-  };
+  // Update visibility settings for each model
+  modelSelectors.forEach((model) => {
+    const isVisible = bridgeModel.some(bridge => bridge.id === model.id);
+    viewState.emphasizeElements([model.id], isVisible);
+  });
   
-  // Update the display style
-  viewDefinition.displayStyle.settings.modelSelector = modelSelector;
-  
+  await vp.synchWithView();
   console.log("Successfully filtered for Bridge-Model-1");
 } else {
   console.warn("Bridge-Model-1 not found in the iModel");
