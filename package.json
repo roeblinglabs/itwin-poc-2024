@@ -76,5 +76,8 @@
     "last 4 edge version",
     "not dead",
     "not <0.2%"
-  ]
+  ],
+  "sass": {
+    "quietDeps": true
+  },
 }
