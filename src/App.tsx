@@ -49,12 +49,6 @@ const App: React.FC = () => {
   const [changesetId, setChangesetId] = useState(process.env.IMJS_AUTH_CLIENT_CHANGESET_ID);
   const [showVideo, setShowVideo] = useState(false);
 
-  // Add this temporarily to your app.tsx code
-const modelSelectors = await vp.iModel.models.queryProps({});
-console.log("Model Selector Methods:", Object.getOwnPropertyNames(Object.getPrototypeOf(modelSelectors)));
-console.log("Viewport Methods:", Object.getOwnPropertyNames(Object.getPrototypeOf(vp)));
-console.log("DisplayStyle Methods:", Object.getOwnPropertyNames(Object.getPrototypeOf(vp.displayStyle)));
-
   const accessToken = useAccessToken();
   const authClient = Auth.getClient();
 
