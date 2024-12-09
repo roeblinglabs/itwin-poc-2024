@@ -107,18 +107,18 @@ const bridgeModel = modelSelectors.filter(
 );
 
 if (bridgeModel.length > 0) {
-  // Get the current display style settings
-  const style = vp.displayStyle;
-  const settings = style.settings;
+  // Get the current view flags
+  const viewFlags = vp.view.viewFlags;
   
-  // Update the view settings
-  settings.viewFlags = {
-    ...settings.viewFlags,
-    // Hide models not matching Bridge-Model-1
-    visibleModels: new Set(bridgeModel.map(model => model.id)),
-  };
+  // Hide all models first
+  modelSelectors.forEach(model => {
+    if (!bridgeModel.some(bridge => bridge.id === model.id)) {
+      viewFlags.setModel(model.id, false);
+    }
+  });
   
-  // Invalidate the scene to refresh the view
+  // Apply the updated view flags
+  vp.view.viewFlags = viewFlags;
   vp.invalidateScene();
   
   console.log("Successfully filtered for Bridge-Model-1");
