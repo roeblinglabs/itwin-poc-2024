@@ -107,15 +107,17 @@ const bridgeModel = modelSelectors.filter(
 );
 
 if (bridgeModel.length > 0) {
-  const viewState = vp.view;
+  // Hide all models except Bridge-Model-1
+  const elements = modelSelectors
+    .filter(model => !bridgeModel.some(bridge => bridge.id === model.id))
+    .map(model => model.id);
+
+  // Set display style to hide unwanted models
+  const style = vp.view.displayStyle;
+  style.excludeElements(elements);
   
-  // Update visibility settings for each model
-  modelSelectors.forEach((model) => {
-    const isVisible = bridgeModel.some(bridge => bridge.id === model.id);
-    viewState.emphasizeElements([model.id], isVisible);
-  });
-  
-  await vp.synchWithView();
+  // Update the viewport
+  vp.synchWithView();
   console.log("Successfully filtered for Bridge-Model-1");
 } else {
   console.warn("Bridge-Model-1 not found in the iModel");
