@@ -110,22 +110,28 @@ if (bridgeModel.length > 0) {
   // Get current view state
   const viewState = vp.view;
   
-  // Update the model visibility using the display style settings
-  const settings = viewState.displayStyle.settings;
-  settings.hiddenElements = new Set(
-    modelSelectors
-      .filter(model => !bridgeModel.some(bridge => bridge.id === model.id))
-      .map(model => model.id)
-  );
+  // Create a categories visibility map
+  const categoryVisibility = new Map<string, boolean>();
   
-  // Force viewport update
+  // Get all categories
+  const categories = await vp.iModel.categories.queryProps({});
+  
+  // Set visibility based on model ownership
+  categories.forEach(category => {
+    const visible = category.modelId === bridgeModel[0].id;
+    if (!visible) {
+      viewState.viewFlags.setVisibleCategory(category.id, false);
+    }
+  });
+  
+  // Update the view
   vp.invalidateScene();
   
   console.log("Successfully filtered for Bridge-Model-1");
 } else {
   console.warn("Bridge-Model-1 not found in the iModel");
 }
-       
+        
         class MarkerDecorator {
           private displacementMarkers: Marker[];
 
