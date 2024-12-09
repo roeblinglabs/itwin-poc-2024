@@ -97,37 +97,6 @@ const App: React.FC = () => {
           applyTerrain: true,
           nonLocatable: true,
         });
-
-// Filter for Bridge-Model-1
-const modelSelectors = await vp.iModel.models.queryProps({});
-console.log("Available models:", modelSelectors.map(model => ({ name: model.name, id: model.id })));
-
-const bridgeModel = modelSelectors.filter(
-  (model) => model.name === "Bridge-Model-1"
-);
-
-if (bridgeModel.length > 0) {
-  // Get current view
-  const view = vp.view;
-  
-  // Update the display style to only show the bridge model
-  const displayStyle = view.displayStyle;
-  const settings = displayStyle.settings;
-  
-  // Set the model selector to only include Bridge-Model-1
-  const modelSelectorProps = {
-    models: bridgeModel.map(model => ({ id: model.id })),
-  };
-  
-  settings.applyActiveModelSelector(modelSelectorProps);
-  
-  // Force view update
-  vp.invalidateScene();
-  
-  console.log("Successfully filtered for Bridge-Model-1");
-} else {
-  console.warn("Bridge-Model-1 not found in the iModel");
-}
         
         class MarkerDecorator {
           private displacementMarkers: Marker[];
