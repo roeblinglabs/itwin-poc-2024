@@ -107,18 +107,23 @@ const bridgeModel = modelSelectors.filter(
 );
 
 if (bridgeModel.length > 0) {
-  // Get all category IDs
-  const categories = await vp.iModel.categories.getAll();
+  // Create a display style for the viewport
+  const style = vp.view.displayStyle;
   
-  // Update view flags to hide categories not associated with Bridge-Model-1
-  const viewFlags = vp.viewFlags;
-  categories.forEach(category => {
-    if (!bridgeModel.some(model => model.id === category.modelId)) {
-      viewFlags.setCategoryVisible(category.id, false);
-    }
-  });
+  // Update the model display
+  const displayStyle = {
+    viewFlags: {
+      ...vp.viewFlags,
+      renderMode: style.viewFlags.renderMode,
+    },
+    contextRealityModelState: style.contextRealityModelState,
+    lighting: style.lighting,
+    backgroundColor: style.backgroundColor,
+  };
   
-  vp.viewFlags = viewFlags;
+  // Apply to viewport
+  vp.applyViewState({ displayStyle });
+  
   console.log("Successfully filtered for Bridge-Model-1");
 } else {
   console.warn("Bridge-Model-1 not found in the iModel");
