@@ -106,14 +106,6 @@ const bridgeModel = modelSelectors.filter(
   (model) => model.name === "Bridge-Model-1"
 );
 
-// Filter for Bridge-Model-1
-const modelSelectors = await vp.iModel.models.queryProps({});
-console.log("Available models:", modelSelectors.map(model => ({ name: model.name, id: model.id })));
-
-const bridgeModel = modelSelectors.filter(
-  (model) => model.name === "Bridge-Model-1"
-);
-
 if (bridgeModel.length > 0) {
   const viewFlags = vp.viewFlags.clone();
   const categories = await vp.iModel.categories.queryProps({});
@@ -130,7 +122,7 @@ if (bridgeModel.length > 0) {
 } else {
   console.warn("Bridge-Model-1 not found in the iModel");
 }
-        
+       
         class MarkerDecorator {
           private displacementMarkers: Marker[];
 
