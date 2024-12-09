@@ -49,6 +49,12 @@ const App: React.FC = () => {
   const [changesetId, setChangesetId] = useState(process.env.IMJS_AUTH_CLIENT_CHANGESET_ID);
   const [showVideo, setShowVideo] = useState(false);
 
+  // Add this temporarily to your app.tsx code
+const modelSelectors = await vp.iModel.models.queryProps({});
+console.log("Model Selector Methods:", Object.getOwnPropertyNames(Object.getPrototypeOf(modelSelectors)));
+console.log("Viewport Methods:", Object.getOwnPropertyNames(Object.getPrototypeOf(vp)));
+console.log("DisplayStyle Methods:", Object.getOwnPropertyNames(Object.getPrototypeOf(vp.displayStyle)));
+
   const accessToken = useAccessToken();
   const authClient = Auth.getClient();
 
@@ -99,38 +105,6 @@ const App: React.FC = () => {
         });
 
 // Filter for Bridge-Model-1
-const modelSelectors = await vp.iModel.models.queryProps({});
-console.log("Available models:", modelSelectors.map(model => ({ name: model.name, id: model.id })));
-
-const bridgeModel = modelSelectors.filter(
-  (model) => model.name === "Bridge-Model-1"
-);
-
-if (bridgeModel.length > 0) {
-  // Get current view state
-  const viewState = vp.view;
-  
-  // Create a categories visibility map
-  const categoryVisibility = new Map<string, boolean>();
-  
-  // Get all categories
-  const categories = await vp.iModel.categories.queryProps({});
-  
-  // Set visibility based on model ownership
-  categories.forEach(category => {
-    const visible = category.modelId === bridgeModel[0].id;
-    if (!visible) {
-      viewState.viewFlags.setVisibleCategory(category.id, false);
-    }
-  });
-  
-  // Update the view
-  vp.invalidateScene();
-  
-  console.log("Successfully filtered for Bridge-Model-1");
-} else {
-  console.warn("Bridge-Model-1 not found in the iModel");
-}
         
         class MarkerDecorator {
           private displacementMarkers: Marker[];
