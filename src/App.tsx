@@ -98,7 +98,7 @@ const App: React.FC = () => {
           nonLocatable: true,
         });
 
-    // Filter for Bridge-Model-1
+// Filter for Bridge-Model-1
 const modelSelectors = await vp.iModel.models.queryProps({});
 console.log("Available models:", modelSelectors.map(model => ({ name: model.name, id: model.id })));
 
@@ -107,10 +107,17 @@ const bridgeModel = modelSelectors.filter(
 );
 
 if (bridgeModel.length > 0) {
-  const style = vp.displayStyle.clone();
-  style.viewFlags = style.viewFlags.clone();
-  style.viewFlags.visibleModels = bridgeModel.map((model) => model.id);
-  vp.displayStyle = style;
+  // Get all model ids
+  const allModelIds = modelSelectors.map(model => model.id);
+  
+  // Create an array where all models are hidden except Bridge-Model-1
+  const modelVisibility = new Map<string, boolean>();
+  allModelIds.forEach(id => {
+    modelVisibility.set(id, bridgeModel.some(model => model.id === id));
+  });
+  
+  // Update model display
+  vp.setModelsDisplay(modelVisibility);
   console.log("Successfully filtered for Bridge-Model-1");
 } else {
   console.warn("Bridge-Model-1 not found in the iModel");
