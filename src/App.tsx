@@ -107,19 +107,18 @@ const bridgeModel = modelSelectors.filter(
 );
 
 if (bridgeModel.length > 0) {
-  // Get the current view flags
-  const viewFlags = vp.view.viewFlags;
-  
-  // Hide all models first
-  modelSelectors.forEach(model => {
-    if (!bridgeModel.some(bridge => bridge.id === model.id)) {
-      viewFlags.setModel(model.id, false);
+  // Try using the IModelApp API to control visibility
+  if (IModelApp.viewManager) {
+    const view = vp.view;
+    const provider = IModelApp.viewManager.frameVisibilityProvider;
+    
+    if (provider) {
+      // Hide all models except Bridge-Model-1
+      provider.hideAll();
+      provider.showOnly([bridgeModel[0].id]);
+      vp.invalidateScene();
     }
-  });
-  
-  // Apply the updated view flags
-  vp.view.viewFlags = viewFlags;
-  vp.invalidateScene();
+  }
   
   console.log("Successfully filtered for Bridge-Model-1");
 } else {
