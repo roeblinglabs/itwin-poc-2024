@@ -87,6 +87,12 @@ const App: React.FC = () => {
   const viewCreatorOptions = useMemo(() => {
     return {
       viewportConfigurer: async (vp: ScreenViewport) => {
+
+  // temporary logging code below to help filter out old model from viewer
+        const modelSelectors = await vp.iModel.models.queryProps({});
+        console.log("Model Selector Methods:", Object.getOwnPropertyNames(Object.getPrototypeOf(modelSelectors)));
+        console.log("Viewport Methods:", Object.getOwnPropertyNames(Object.getPrototypeOf(vp)));
+        console.log("DisplayStyle Methods:", Object.getOwnPropertyNames(Object.getPrototypeOf(vp.displayStyle)));
         
         vp.changeBackgroundMapProvider({
           name: "MapBoxProvider",
