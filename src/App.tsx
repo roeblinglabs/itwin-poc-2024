@@ -107,22 +107,17 @@ const bridgeModel = modelSelectors.filter(
 );
 
 if (bridgeModel.length > 0) {
-  // Create a display style for the viewport
-  const style = vp.view.displayStyle;
+  // Get current view definition
+  const view = vp.view;
   
-  // Update the model display
-  const displayStyle = {
-    viewFlags: {
-      ...vp.viewFlags,
-      renderMode: style.viewFlags.renderMode,
-    },
-    contextRealityModelState: style.contextRealityModelState,
-    lighting: style.lighting,
-    backgroundColor: style.backgroundColor,
-  };
+  // Create a model selector to only show the bridge model
+  const displayStyle = view.displayStyle;
+  displayStyle.setModelSelector({
+    modelIds: [bridgeModel[0].id],
+  });
   
-  // Apply to viewport
-  vp.applyViewState({ displayStyle });
+  // Update the view
+  vp.invalidateScene();
   
   console.log("Successfully filtered for Bridge-Model-1");
 } else {
