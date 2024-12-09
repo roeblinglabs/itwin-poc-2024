@@ -87,6 +87,10 @@ const App: React.FC = () => {
   const viewCreatorOptions = useMemo(() => {
     return {
       viewportConfigurer: async (vp: ScreenViewport) => {
+        
+        const modelSelectors = await vp.iModel.models.queryProps({});
+        console.log("All available models:", modelSelectors.map(model => model.name));
+        
         vp.changeBackgroundMapProvider({
           name: "MapBoxProvider",
           type: BackgroundMapType.Aerial,
