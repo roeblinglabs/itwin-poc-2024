@@ -88,12 +88,6 @@ const App: React.FC = () => {
     return {
       viewportConfigurer: async (vp: ScreenViewport) => {
 
-  // temporary logging code below to help filter out old model from viewer
-        const modelSelectors = await vp.iModel.models.queryProps({});
-        console.log("Model Selector Methods:", Object.getOwnPropertyNames(Object.getPrototypeOf(modelSelectors)));
-        console.log("Viewport Methods:", Object.getOwnPropertyNames(Object.getPrototypeOf(vp)));
-        console.log("DisplayStyle Methods:", Object.getOwnPropertyNames(Object.getPrototypeOf(vp.displayStyle)));
-        
         vp.changeBackgroundMapProvider({
           name: "MapBoxProvider",
           type: BackgroundMapType.Aerial,
@@ -105,6 +99,32 @@ const App: React.FC = () => {
         });
 
 // Filter for Bridge-Model-1
+const modelSelectors = await vp.iModel.models.queryProps({});
+console.log("Available models:", modelSelectors.map(model => ({ name: model.name, id: model.id })));
+
+const bridgeModel = modelSelectors.filter(
+  (model) => model.name === "Bridge-Model-1"
+);
+
+if (bridgeModel.length > 0) {
+  // Get the current display style settings
+  const style = vp.displayStyle;
+  const settings = style.settings;
+  
+  // Update the view settings
+  settings.viewFlags = {
+    ...settings.viewFlags,
+    // Hide models not matching Bridge-Model-1
+    visibleModels: new Set(bridgeModel.map(model => model.id)),
+  };
+  
+  // Invalidate the scene to refresh the view
+  vp.invalidateScene();
+  
+  console.log("Successfully filtered for Bridge-Model-1");
+} else {
+  console.warn("Bridge-Model-1 not found in the iModel");
+}
         
         class MarkerDecorator {
           private displacementMarkers: Marker[];
