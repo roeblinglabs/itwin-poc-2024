@@ -16,7 +16,8 @@ import {
 } from "@itwin/web-viewer-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
-import { Point3d, Cartographic, Transform } from "@itwin/core-geometry";
+import { Point3d } from "@itwin/core-geometry";
+import { SpatialLocation, GeoLocation } from "@itwin/core-common";
 import { Auth } from "./Auth";
 import { history } from "./history";
 
@@ -68,33 +69,35 @@ const App: React.FC = () => {
         return;
       }
 
-      // Create cartographic position for the bridge
-      const position = Cartographic.fromDegrees({
-        longitude: BRIDGE_LOCATION.longitude,
-        latitude: BRIDGE_LOCATION.latitude,
-        height: BRIDGE_LOCATION.elevation,
-      });
-
-      // Create transform for the model
-      const transform = Transform.createOriginAndRotation(
-        position,
-        BRIDGE_LOCATION.rotation,
-        { x: 0, y: 0, z: 1 }
+      // Create spatial location for the bridge
+      const location = GeoLocation.createFromLatLongAndElevation(
+        BRIDGE_LOCATION.latitude,
+        BRIDGE_LOCATION.longitude,
+        BRIDGE_LOCATION.elevation
       );
+
+      // Create reality data client
+      const realityDataClient = IModelApp.realityDataAccess;
+      if (!realityDataClient) {
+        console.error("Reality data client not initialized");
+        return;
+      }
 
       // Attach the reality model
-      const attachment = await IModelApp.realityDataAccess.attachRealityModel(
-        vp.iModel,
-        realityModelId,
-        transform
-      );
+      const attachment = await realityDataClient.attachRealityModel({
+        realityDataId: realityModelId,
+        location: location,
+        rotation: BRIDGE_LOCATION.rotation,
+      });
 
       console.log("Reality model attached successfully:", attachment);
 
-      // Optionally zoom to the area
-      const range = attachment.range;
-      if (range) {
-        vp.zoomToVolume(range);
+      // Zoom to the attached model
+      if (attachment && vp) {
+        const range = attachment.range;
+        if (range) {
+          vp.zoomToVolume(range);
+        }
       }
     } catch (error) {
       console.error("Error attaching reality model:", error);
