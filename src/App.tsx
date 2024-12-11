@@ -16,7 +16,7 @@ import {
 } from "@itwin/web-viewer-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
-import { Point3d } from "@itwin/core-geometry";
+import { Point3d, Cartographic, Transform } from "@itwin/core-geometry";
 import { Auth } from "./Auth";
 import { history } from "./history";
 
@@ -33,7 +33,7 @@ export class DisplacementSensorMarker extends Marker {
 
     this.onMouseButton = (ev) => {
       if (ev.button === 0) {
-        onClick(); // Call the provided onClick function
+        onClick();
         return true;
       }
       return false;
@@ -48,9 +48,58 @@ const App: React.FC = () => {
   const [CesiumKey] = useState(process.env.REACT_APP_IMJS_CESIUM_ION_KEY ?? "");
   const [changesetId, setChangesetId] = useState(process.env.IMJS_AUTH_CLIENT_CHANGESET_ID);
   const [showVideo, setShowVideo] = useState(false);
+  const [realityModelId] = useState(process.env.REACT_APP_REALITY_MODEL_ID ?? "");
 
   const accessToken = useAccessToken();
   const authClient = Auth.getClient();
+
+  // Lowell Road Bridge coordinates
+  const BRIDGE_LOCATION = {
+    latitude: 42.466602,
+    longitude: -71.355709,
+    elevation: 0,  // Adjust if needed based on actual bridge elevation
+    rotation: Math.PI * -0.1  // Slight rotation to align with bridge orientation
+  };
+
+  const attachRealityModel = async (vp: ScreenViewport) => {
+    try {
+      if (!realityModelId) {
+        console.error("Reality Model ID not found in environment variables");
+        return;
+      }
+
+      // Create cartographic position for the bridge
+      const position = Cartographic.fromDegrees({
+        longitude: BRIDGE_LOCATION.longitude,
+        latitude: BRIDGE_LOCATION.latitude,
+        height: BRIDGE_LOCATION.elevation,
+      });
+
+      // Create transform for the model
+      const transform = Transform.createOriginAndRotation(
+        position,
+        BRIDGE_LOCATION.rotation,
+        { x: 0, y: 0, z: 1 }
+      );
+
+      // Attach the reality model
+      const attachment = await IModelApp.realityDataAccess.attachRealityModel(
+        vp.iModel,
+        realityModelId,
+        transform
+      );
+
+      console.log("Reality model attached successfully:", attachment);
+
+      // Optionally zoom to the area
+      const range = attachment.range;
+      if (range) {
+        vp.zoomToVolume(range);
+      }
+    } catch (error) {
+      console.error("Error attaching reality model:", error);
+    }
+  };
 
   const login = useCallback(async () => {
     try {
@@ -87,7 +136,7 @@ const App: React.FC = () => {
   const viewCreatorOptions = useMemo(() => {
     return {
       viewportConfigurer: async (vp: ScreenViewport) => {
-
+        // Set up background map
         vp.changeBackgroundMapProvider({
           name: "MapBoxProvider",
           type: BackgroundMapType.Aerial,
@@ -98,6 +147,10 @@ const App: React.FC = () => {
           nonLocatable: true,
         });
         
+        // Attach reality model
+        await attachRealityModel(vp);
+
+        // Set up markers
         class MarkerDecorator {
           private displacementMarkers: Marker[];
 
