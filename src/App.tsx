@@ -17,7 +17,6 @@ import {
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Point3d } from "@itwin/core-geometry";
-import { SpatialLocation, GeoLocation } from "@itwin/core-common";
 import { Auth } from "./Auth";
 import { history } from "./history";
 
@@ -58,8 +57,8 @@ const App: React.FC = () => {
   const BRIDGE_LOCATION = {
     latitude: 42.466602,
     longitude: -71.355709,
-    elevation: 0,  // Adjust if needed based on actual bridge elevation
-    rotation: Math.PI * -0.1  // Slight rotation to align with bridge orientation
+    elevation: 0,
+    rotation: Math.PI * -0.1
   };
 
   const attachRealityModel = async (vp: ScreenViewport) => {
@@ -69,36 +68,35 @@ const App: React.FC = () => {
         return;
       }
 
-      // Create spatial location for the bridge
-      const location = GeoLocation.createFromLatLongAndElevation(
-        BRIDGE_LOCATION.latitude,
-        BRIDGE_LOCATION.longitude,
-        BRIDGE_LOCATION.elevation
-      );
-
-      // Create reality data client
-      const realityDataClient = IModelApp.realityDataAccess;
-      if (!realityDataClient) {
-        console.error("Reality data client not initialized");
+      // Get the reality data access instance
+      const realityDataAccess = IModelApp.realityDataAccess;
+      if (!realityDataAccess) {
+        console.error("Reality data access not initialized");
         return;
       }
 
       // Attach the reality model
-      const attachment = await realityDataClient.attachRealityModel({
+      const props = {
         realityDataId: realityModelId,
-        location: location,
-        rotation: BRIDGE_LOCATION.rotation,
-      });
+        location: {
+          latitude: BRIDGE_LOCATION.latitude,
+          longitude: BRIDGE_LOCATION.longitude,
+          height: BRIDGE_LOCATION.elevation
+        },
+        rotation: BRIDGE_LOCATION.rotation
+      };
 
+      const attachment = await realityDataAccess.attachRealityData(props);
       console.log("Reality model attached successfully:", attachment);
 
-      // Zoom to the attached model
+      // Zoom to the attached model if possible
       if (attachment && vp) {
-        const range = attachment.range;
+        const range = attachment.getRange();
         if (range) {
           vp.zoomToVolume(range);
         }
       }
+
     } catch (error) {
       console.error("Error attaching reality model:", error);
     }
