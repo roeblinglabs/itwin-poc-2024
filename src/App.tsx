@@ -16,15 +16,18 @@ import {
 } from "@itwin/web-viewer-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
-import { Point3d, Range3d } from "@itwin/core-geometry";
+import { Point3d, Vector3d } from "@itwin/core-geometry";
 import { Auth } from "./Auth";
 import { history } from "./history";
 
 import { BackgroundMapType } from "@itwin/core-common";
 
 export class DisplacementSensorMarker extends Marker {
+  private _position: Point3d;
+
   constructor(location: Point3d, size: { x: number; y: number }, label: string, onClick: () => void) {
     super(location, size);
+    this._position = location;
 
     this.title = `Displacement Sensor: ${label}`;
     this.setImageUrl("/images/icons8-sensor-96.png");
@@ -38,6 +41,10 @@ export class DisplacementSensorMarker extends Marker {
       }
       return false;
     };
+  }
+
+  public get position(): Point3d {
+    return this._position;
   }
 }
 
@@ -105,17 +112,20 @@ const App: React.FC = () => {
           new DisplacementSensorMarker(new Point3d(-0.5, 2, 0.5), { x: 40, y: 40 }, "Virtual Sensor 3", () => setShowVideo(true)),
         ];
 
-        // Calculate the range that encompasses all markers
-        const range = new Range3d();
+        // Calculate center point of all markers
+        const center = Point3d.create(0, 0, 0);
         displacementMarkers.forEach(marker => {
-          range.extendPoint(marker.location);
+          center.addInPlace(marker.position);
         });
+        center.scaleInPlace(1 / displacementMarkers.length);
+
+        // Set up the view
+        const eye = center.clone();
+        eye.addInPlace(new Vector3d(5, 5, 5)); // Adjust these values to change the camera position
+        const up = Vector3d.unitZ();
         
-        // Add some padding to the range
-        range.expand(0.5);
-        
-        // Zoom to the range
-        vp.zoomToVolume(range);
+        // Set the view
+        vp.lookAt({ eye, center, up });
         
         // Create and add the decorator
         class MarkerDecorator {
