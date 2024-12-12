@@ -16,7 +16,7 @@ import {
 } from "@itwin/web-viewer-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
-import { Point3d } from "@itwin/core-geometry";
+import { Point3d, Range3d } from "@itwin/core-geometry";
 import { Auth } from "./Auth";
 import { history } from "./history";
 
@@ -33,7 +33,7 @@ export class DisplacementSensorMarker extends Marker {
 
     this.onMouseButton = (ev) => {
       if (ev.button === 0) {
-        onClick(); // Call the provided onClick function
+        onClick();
         return true;
       }
       return false;
@@ -87,6 +87,7 @@ const App: React.FC = () => {
   const viewCreatorOptions = useMemo(() => {
     return {
       viewportConfigurer: async (vp: ScreenViewport) => {
+        // Set up the background map
         vp.changeBackgroundMapProvider({
           name: "MapBoxProvider",
           type: BackgroundMapType.Aerial,
@@ -97,6 +98,26 @@ const App: React.FC = () => {
           nonLocatable: true,
         });
         
+        // Create the markers
+        const displacementMarkers = [
+          new DisplacementSensorMarker(new Point3d(-0.5, 0.8, 0.5), { x: 40, y: 40 }, "Virtual Sensor 1", () => setShowVideo(true)),
+          new DisplacementSensorMarker(new Point3d(-0.5, 1.4, 0.5), { x: 40, y: 40 }, "Virtual Sensor 2", () => setShowVideo(true)),
+          new DisplacementSensorMarker(new Point3d(-0.5, 2, 0.5), { x: 40, y: 40 }, "Virtual Sensor 3", () => setShowVideo(true)),
+        ];
+
+        // Calculate the range that encompasses all markers
+        const range = new Range3d();
+        displacementMarkers.forEach(marker => {
+          range.extendPoint(marker.location);
+        });
+        
+        // Add some padding to the range
+        range.expand(0.5);
+        
+        // Zoom to the range
+        vp.zoomToVolume(range);
+        
+        // Create and add the decorator
         class MarkerDecorator {
           private displacementMarkers: Marker[];
 
@@ -108,12 +129,6 @@ const App: React.FC = () => {
             this.displacementMarkers.forEach((marker) => marker.addDecoration(context));
           }
         }
-
-        const displacementMarkers = [
-          new DisplacementSensorMarker(new Point3d(-0.5, 0.8, 0.5), { x: 40, y: 40 }, "Virtual Sensor 1", () => setShowVideo(true)),
-          new DisplacementSensorMarker(new Point3d(-0.5, 1.4, 0.5), { x: 40, y: 40 }, "Virtual Sensor 2", () => setShowVideo(true)),
-          new DisplacementSensorMarker(new Point3d(-0.5, 2, 0.5), { x: 40, y: 40 }, "Virtual Sensor 3", () => setShowVideo(true)),
-        ];
 
         const markerDecorator = new MarkerDecorator(displacementMarkers);
         IModelApp.viewManager.addDecorator(markerDecorator);
