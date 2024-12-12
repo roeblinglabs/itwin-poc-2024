@@ -111,9 +111,9 @@ const App: React.FC = () => {
         }
 
         const displacementMarkers = [
-          new DisplacementSensorMarker(new Point3d(903135.21, 15801167.09, 593.59), { x: 40, y: 40 }, "Virtual Sensor 2", () => setShowVideo(true)),
-          new DisplacementSensorMarker(new Point3d(903136.05, 15801149.75, 593.79), { x: 40, y: 40 }, "Virtual Sensor 1", () => setShowVideo(true)),
-          new DisplacementSensorMarker(new Point3d(903134.63, 15801133.66, 593.89), { x: 40, y: 40 }, "Virtual Sensor 3", () => setShowVideo(true)),
+          new DisplacementSensorMarker(new Point3d(-0.5, 0.8, 0.5), { x: 40, y: 40 }, "Virtual Sensor 1", () => setShowVideo(true)),
+          new DisplacementSensorMarker(new Point3d(-0.5, 1.4, 0.5), { x: 40, y: 40 }, "Virtual Sensor 2", () => setShowVideo(true)),
+          new DisplacementSensorMarker(new Point3d(-0.5, 2, 0.5), { x: 40, y: 40 }, "Virtual Sensor 3", () => setShowVideo(true)),
         ];
 
         const markerDecorator = new MarkerDecorator(displacementMarkers);
