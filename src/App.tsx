@@ -1,7 +1,13 @@
 import "./App.scss";
 
 import type { ScreenViewport } from "@itwin/core-frontend";
-import { FitViewTool, IModelApp, StandardViewId, Marker, DecorateContext } from "@itwin/core-frontend";
+import {
+  FitViewTool,
+  IModelApp,
+  StandardViewId,
+  Marker,
+  DecorateContext,
+} from "@itwin/core-frontend";
 import { FillCentered } from "@itwin/core-react";
 import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
 import { ProgressLinear } from "@itwin/itwinui-react";
@@ -87,16 +93,25 @@ const App: React.FC = () => {
   const viewCreatorOptions = useMemo(() => {
     return {
       viewportConfigurer: async (vp: ScreenViewport) => {
+        // ✅ Set background map
         vp.changeBackgroundMapProvider({
           name: "MapBoxProvider",
           type: BackgroundMapType.Aerial,
         });
-        
+
         vp.changeBackgroundMapProps({
           applyTerrain: true,
           nonLocatable: true,
         });
-        
+
+        // ✅ Enable reality model display
+        const displayStyle = vp.view.displayStyle;
+        displayStyle.settings.backgroundMap.setEnabled(true);
+        displayStyle.settings.setRealityModelsDisplay({
+          backgroundRealityModels: "on",
+        });
+
+        // ✅ Marker decorator for virtual sensors
         class MarkerDecorator {
           private displacementMarkers: Marker[];
 
