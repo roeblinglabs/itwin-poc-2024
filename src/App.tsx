@@ -16,18 +16,15 @@ import {
 } from "@itwin/web-viewer-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
-import { Point3d, Vector3d } from "@itwin/core-geometry";
+import { Point3d } from "@itwin/core-geometry";
 import { Auth } from "./Auth";
 import { history } from "./history";
 
 import { BackgroundMapType } from "@itwin/core-common";
 
 export class DisplacementSensorMarker extends Marker {
-  private _position: Point3d;
-
   constructor(location: Point3d, size: { x: number; y: number }, label: string, onClick: () => void) {
     super(location, size);
-    this._position = location;
 
     this.title = `Displacement Sensor: ${label}`;
     this.setImageUrl("/images/icons8-sensor-96.png");
@@ -36,15 +33,11 @@ export class DisplacementSensorMarker extends Marker {
 
     this.onMouseButton = (ev) => {
       if (ev.button === 0) {
-        onClick();
+        onClick(); // Call the provided onClick function
         return true;
       }
       return false;
     };
-  }
-
-  public get position(): Point3d {
-    return this._position;
   }
 }
 
@@ -94,7 +87,6 @@ const App: React.FC = () => {
   const viewCreatorOptions = useMemo(() => {
     return {
       viewportConfigurer: async (vp: ScreenViewport) => {
-        // Set up the background map
         vp.changeBackgroundMapProvider({
           name: "MapBoxProvider",
           type: BackgroundMapType.Aerial,
@@ -105,29 +97,6 @@ const App: React.FC = () => {
           nonLocatable: true,
         });
         
-        // Create the markers
-        const displacementMarkers = [
-          new DisplacementSensorMarker(new Point3d(-0.5, 0.8, 0.5), { x: 40, y: 40 }, "Virtual Sensor 1", () => setShowVideo(true)),
-          new DisplacementSensorMarker(new Point3d(-0.5, 1.4, 0.5), { x: 40, y: 40 }, "Virtual Sensor 2", () => setShowVideo(true)),
-          new DisplacementSensorMarker(new Point3d(-0.5, 2, 0.5), { x: 40, y: 40 }, "Virtual Sensor 3", () => setShowVideo(true)),
-        ];
-
-        // Calculate center point of all markers
-        const center = Point3d.create(0, 0, 0);
-        displacementMarkers.forEach(marker => {
-          center.addInPlace(marker.position);
-        });
-        center.scaleInPlace(1 / displacementMarkers.length);
-
-        // Set up the view
-        const eye = center.clone();
-        eye.addInPlace(new Vector3d(5, 5, 5)); // Adjust these values to change the camera position
-        const up = Vector3d.unitZ();
-        
-        // Set the view
-        vp.lookAt({ eye, center, up });
-        
-        // Create and add the decorator
         class MarkerDecorator {
           private displacementMarkers: Marker[];
 
@@ -139,6 +108,12 @@ const App: React.FC = () => {
             this.displacementMarkers.forEach((marker) => marker.addDecoration(context));
           }
         }
+
+        const displacementMarkers = [
+          new DisplacementSensorMarker(new Point3d(0, 0, 10), { x: 40, y: 40 }, "Virtual Sensor 1", () => setShowVideo(true)),
+          new DisplacementSensorMarker(new Point3d(5, 0, 10), { x: 40, y: 40 }, "Virtual Sensor 2", () => setShowVideo(true)),
+          new DisplacementSensorMarker(new Point3d(10, 0, 10), { x: 40, y: 40 }, "Virtual Sensor 3", () => setShowVideo(true)),
+        ];
 
         const markerDecorator = new MarkerDecorator(displacementMarkers);
         IModelApp.viewManager.addDecorator(markerDecorator);
@@ -190,5 +165,4 @@ const App: React.FC = () => {
     </div>
   );
 };
-
 export default App;
