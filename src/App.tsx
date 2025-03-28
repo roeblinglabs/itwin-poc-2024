@@ -16,28 +16,42 @@ import {
 } from "@itwin/web-viewer-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
-import { Point3d } from "@itwin/core-geometry";
+import { Point2d, Point3d } from "@itwin/core-geometry";
 import { Auth } from "./Auth";
 import { history } from "./history";
 
 import { BackgroundMapType } from "@itwin/core-common";
 
+// Following Bentley's tutorial pattern
 export class DisplacementSensorMarker extends Marker {
-  constructor(location: Point3d, size: { x: number; y: number }, label: string, onClick: () => void) {
-    super(location, size);
+  private static _height = 40; // Default height for markers
+  private _onMouseButtonCallback: any;
 
-    this.title = `Displacement Sensor: ${label}`;
+  constructor(worldLocation: Point3d, title: string, onMouseButtonCallback: any) {
+    // Create a default size based on the static height
+    // Using 1:1 aspect ratio for simplicity
+    const size = new Point2d(DisplacementSensorMarker._height, DisplacementSensorMarker._height);
+    
+    super(worldLocation, size);
+    
+    this._onMouseButtonCallback = onMouseButtonCallback;
+    this.title = title;
+    
+    // Set image URL (we'll use setImageUrl instead of setImage since we don't have the HTMLImageElement directly)
     this.setImageUrl("/images/icons8-sensor-96.png");
-    this.label = label;
+    
+    // Set label properties
+    this.label = title.replace("Displacement Sensor: ", "");
     this.labelOffset = { x: 0, y: 30 };
+  }
 
-    this.onMouseButton = (ev) => {
-      if (ev.button === 0) {
-        onClick(); // Call the provided onClick function
-        return true;
-      }
-      return false;
-    };
+  // Override the onMouseButton method to use our callback
+  public override onMouseButton(ev: any): boolean {
+    if (ev.button === 0) {
+      this._onMouseButtonCallback();
+      return true;
+    }
+    return false;
   }
 }
 
@@ -98,56 +112,67 @@ const App: React.FC = () => {
           nonLocatable: true,
         });
         
-        // Enable reality models - using direct property access instead of methods
+        // Enable reality models - using direct property access
         const displayStyle = vp.view.displayStyle;
-        
-        // Fix TS2339 error: Use enabled property directly instead of setEnabled method
         displayStyle.settings.backgroundMap.enabled = true;
-        
-        // Fix TS2551 error: Set realityModels properties directly instead of using setRealityModelsDisplay
-        // There are different approaches depending on the exact SDK version
-        // This is a more compatible approach:
-        if (displayStyle.settings.realityModels) {
-          displayStyle.settings.realityModels.backgroundRealityModels = true;
-        }
-        
+
         try {
-          // Create a marker set for better management
-          const markerSet = new MarkerSet();
+          // Following Bentley tutorial approach for decorators
+          class SensorDecorator {
+            private _markers: DisplacementSensorMarker[] = [];
+            
+            public constructor(markers: DisplacementSensorMarker[]) {
+              this._markers = markers;
+            }
+            
+            public decorate(context: DecorateContext): void {
+              this._markers.forEach((marker) => marker.addDecoration(context));
+            }
+          }
           
-          // Helper function to convert lat/lon to spatial coordinates using the available APIs
-          const createGeoMarker = async (latitude: number, longitude: number, height: number, label: string): Promise<void> => {
+          // Helper function to convert lat/lon to spatial coordinates
+          const createGeoMarker = async (
+            latitude: number, 
+            longitude: number, 
+            height: number, 
+            label: string
+          ): Promise<DisplacementSensorMarker | undefined> => {
             try {
-              // Use the geoServices API directly - this is the most compatible approach
+              // Convert geographic to spatial coordinates
               const geoCoord = { latitude, longitude, height };
               const spatialLocation = await vp.iModel.geoServices.spatialFromGeoCoordinates(geoCoord);
               
-              const marker = new DisplacementSensorMarker(
+              // Create marker following the tutorial pattern
+              return new DisplacementSensorMarker(
                 spatialLocation,
-                { x: 40, y: 40 },
-                label,
+                `Displacement Sensor: ${label}`,
                 () => setShowVideo(true)
               );
-              
-              markerSet.markers.push(marker);
             } catch (error) {
               console.error(`Error creating marker ${label}:`, error);
+              return undefined;
             }
           };
           
           // Create markers at your specified coordinates
-          await createGeoMarker(42.466527, -71.355628, 200, "Virtual Sensor 1");
-          await createGeoMarker(42.466565, -71.355720, 200, "Virtual Sensor 2");
-          await createGeoMarker(42.466597, -71.355799, 200, "Virtual Sensor 3");
+          const markers: DisplacementSensorMarker[] = [];
           
-          // Add the marker set to the viewport
-          IModelApp.viewManager.addMarkerSet(markerSet);
+          const marker1 = await createGeoMarker(42.466527, -71.355628, 200, "Virtual Sensor 1");
+          if (marker1) markers.push(marker1);
           
-          // Fix TS2554 error: Provide required arguments to FitViewTool
+          const marker2 = await createGeoMarker(42.466565, -71.355720, 200, "Virtual Sensor 2");
+          if (marker2) markers.push(marker2);
+          
+          const marker3 = await createGeoMarker(42.466597, -71.355799, 200, "Virtual Sensor 3");
+          if (marker3) markers.push(marker3);
+          
+          // Create and add the decorator
+          const decorator = new SensorDecorator(markers);
+          IModelApp.viewManager.addDecorator(decorator);
+          
+          // Focus the view after a delay
           setTimeout(() => {
-            // Use FitViewTool with viewport as first argument
-            const tool = new FitViewTool(vp);
-            tool.run();
+            vp.zoomToElements(markers.map(m => m.location), { animateFrustumChange: true });
           }, 1000);
           
         } catch (error) {
