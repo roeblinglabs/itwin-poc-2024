@@ -98,12 +98,18 @@ const App: React.FC = () => {
           nonLocatable: true,
         });
         
-        // Enable reality models
+        // Enable reality models - using direct property access instead of methods
         const displayStyle = vp.view.displayStyle;
-        displayStyle.settings.backgroundMap.setEnabled(true);
-        displayStyle.settings.setRealityModelsDisplay({
-          backgroundRealityModels: "on",
-        });
+        
+        // Fix TS2339 error: Use enabled property directly instead of setEnabled method
+        displayStyle.settings.backgroundMap.enabled = true;
+        
+        // Fix TS2551 error: Set realityModels properties directly instead of using setRealityModelsDisplay
+        // There are different approaches depending on the exact SDK version
+        // This is a more compatible approach:
+        if (displayStyle.settings.realityModels) {
+          displayStyle.settings.realityModels.backgroundRealityModels = true;
+        }
         
         try {
           // Create a marker set for better management
@@ -137,9 +143,10 @@ const App: React.FC = () => {
           // Add the marker set to the viewport
           IModelApp.viewManager.addMarkerSet(markerSet);
           
-          // Fit view to show all markers
+          // Fix TS2554 error: Provide required arguments to FitViewTool
           setTimeout(() => {
-            const tool = new FitViewTool();
+            // Use FitViewTool with viewport as first argument
+            const tool = new FitViewTool(vp);
             tool.run();
           }, 1000);
           
