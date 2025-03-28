@@ -1,14 +1,7 @@
 import "./App.scss";
 
 import type { ScreenViewport } from "@itwin/core-frontend";
-import { 
-  IModelApp, 
-  NoRenderApp,
-  StandardViewId, 
-  Marker, 
-  DecorateContext,
-  Decorator
-} from "@itwin/core-frontend";
+import { FitViewTool, IModelApp, StandardViewId, Marker, DecorateContext } from "@itwin/core-frontend";
 import { FillCentered } from "@itwin/core-react";
 import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
 import { ProgressLinear } from "@itwin/itwinui-react";
@@ -23,50 +16,28 @@ import {
 } from "@itwin/web-viewer-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
-import { Point2d, Point3d, XYAndZ } from "@itwin/core-geometry";
+import { Point3d } from "@itwin/core-geometry";
 import { Auth } from "./Auth";
 import { history } from "./history";
 
 import { BackgroundMapType } from "@itwin/core-common";
 
-class SensorMarker extends Marker {
-  private static _height = 40;
-  private _onClickCallback: () => void;
+export class DisplacementSensorMarker extends Marker {
+  constructor(location: Point3d, size: { x: number; y: number }, label: string, onClick: () => void) {
+    super(location, size);
 
-  constructor(worldLocation: Point3d, label: string, onClick: () => void) {
-    // Create a default size based on the static height
-    super(worldLocation, new Point2d(SensorMarker._height, SensorMarker._height));
-    
-    this._onClickCallback = onClick;
     this.title = `Displacement Sensor: ${label}`;
     this.setImageUrl("/images/icons8-sensor-96.png");
     this.label = label;
     this.labelOffset = { x: 0, y: 30 };
-  }
 
-  public override onMouseButton(ev: any): boolean {
-    if (ev.button === 0) {
-      this._onClickCallback();
-      return true;
-    }
-    return false;
-  }
-}
-
-// Following the Bentley tutorial exactly
-class SensorDecorator implements Decorator {
-  private _markers: SensorMarker[] = [];
-
-  public constructor() {
-    this._markers = [];
-  }
-
-  public addMarker(marker: SensorMarker): void {
-    this._markers.push(marker);
-  }
-
-  public decorate(context: DecorateContext): void {
-    this._markers.forEach((marker) => marker.addDecoration(context));
+    this.onMouseButton = (ev) => {
+      if (ev.button === 0) {
+        onClick(); // Call the provided onClick function
+        return true;
+      }
+      return false;
+    };
   }
 }
 
@@ -116,7 +87,6 @@ const App: React.FC = () => {
   const viewCreatorOptions = useMemo(() => {
     return {
       viewportConfigurer: async (vp: ScreenViewport) => {
-        // Set background map
         vp.changeBackgroundMapProvider({
           name: "MapBoxProvider",
           type: BackgroundMapType.Aerial,
@@ -127,33 +97,26 @@ const App: React.FC = () => {
           nonLocatable: true,
         });
         
-        // Create the sensor decorator
-        const sensorDecorator = new SensorDecorator();
-        
-        // Add it to the viewport
-        IModelApp.viewManager.addDecorator(sensorDecorator);
+        class MarkerDecorator {
+          private displacementMarkers: Marker[];
 
-        // Function to create a marker at specific world coordinates
-        const createMarkerAtXYZ = (x: number, y: number, z: number, label: string): SensorMarker => {
-          const worldLocation = new Point3d(x, y, z);
-          const marker = new SensorMarker(worldLocation, label, () => setShowVideo(true));
-          sensorDecorator.addMarker(marker);
-          return marker;
-        };
+          constructor(displacementMarkers: Marker[]) {
+            this.displacementMarkers = displacementMarkers;
+          }
 
-        // The tutorial doesn't use geolocations directly, so let's use world coordinates initially
-        // We'll create markers at specific locations
-        createMarkerAtXYZ(0, 0, 10, "Virtual Sensor 1");
-        createMarkerAtXYZ(5, 0, 10, "Virtual Sensor 2");
-        createMarkerAtXYZ(10, 0, 10, "Virtual Sensor 3");
+          public decorate(context: DecorateContext): void {
+            this.displacementMarkers.forEach((marker) => marker.addDecoration(context));
+          }
+        }
 
-        // Try to set the view to show the markers
-        const viewFlags = vp.view.viewFlags.clone();
-        viewFlags.renderMode = 1; // Use realistic rendering
-        vp.view.setViewFlags(viewFlags);
+        const displacementMarkers = [
+          new DisplacementSensorMarker(new Point3d(0, 0, 10), { x: 40, y: 40 }, "Virtual Sensor 1", () => setShowVideo(true)),
+          new DisplacementSensorMarker(new Point3d(5, 0, 10), { x: 40, y: 40 }, "Virtual Sensor 2", () => setShowVideo(true)),
+          new DisplacementSensorMarker(new Point3d(10, 0, 10), { x: 40, y: 40 }, "Virtual Sensor 3", () => setShowVideo(true)),
+        ];
 
-        // Set a good starting view
-        vp.view.lookAt({ eye: [5, -20, 20], target: [5, 0, 0] });
+        const markerDecorator = new MarkerDecorator(displacementMarkers);
+        IModelApp.viewManager.addDecorator(markerDecorator);
       },
     };
   }, []);
@@ -202,5 +165,4 @@ const App: React.FC = () => {
     </div>
   );
 };
-
 export default App;
