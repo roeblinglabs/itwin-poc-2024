@@ -1,7 +1,14 @@
 import "./App.scss";
 
 import type { ScreenViewport } from "@itwin/core-frontend";
-import { FitViewTool, IModelApp, StandardViewId, Marker, DecorateContext, MarkerSet } from "@itwin/core-frontend";
+import { 
+  IModelApp, 
+  NoRenderApp,
+  StandardViewId, 
+  Marker, 
+  DecorateContext,
+  Decorator
+} from "@itwin/core-frontend";
 import { FillCentered } from "@itwin/core-react";
 import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
 import { ProgressLinear } from "@itwin/itwinui-react";
@@ -16,42 +23,50 @@ import {
 } from "@itwin/web-viewer-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
-import { Point2d, Point3d } from "@itwin/core-geometry";
+import { Point2d, Point3d, XYAndZ } from "@itwin/core-geometry";
 import { Auth } from "./Auth";
 import { history } from "./history";
 
 import { BackgroundMapType } from "@itwin/core-common";
 
-// Following Bentley's tutorial pattern
-export class DisplacementSensorMarker extends Marker {
-  private static _height = 40; // Default height for markers
-  private _onMouseButtonCallback: any;
+class SensorMarker extends Marker {
+  private static _height = 40;
+  private _onClickCallback: () => void;
 
-  constructor(worldLocation: Point3d, title: string, onMouseButtonCallback: any) {
+  constructor(worldLocation: Point3d, label: string, onClick: () => void) {
     // Create a default size based on the static height
-    // Using 1:1 aspect ratio for simplicity
-    const size = new Point2d(DisplacementSensorMarker._height, DisplacementSensorMarker._height);
+    super(worldLocation, new Point2d(SensorMarker._height, SensorMarker._height));
     
-    super(worldLocation, size);
-    
-    this._onMouseButtonCallback = onMouseButtonCallback;
-    this.title = title;
-    
-    // Set image URL (we'll use setImageUrl instead of setImage since we don't have the HTMLImageElement directly)
+    this._onClickCallback = onClick;
+    this.title = `Displacement Sensor: ${label}`;
     this.setImageUrl("/images/icons8-sensor-96.png");
-    
-    // Set label properties
-    this.label = title.replace("Displacement Sensor: ", "");
+    this.label = label;
     this.labelOffset = { x: 0, y: 30 };
   }
 
-  // Override the onMouseButton method to use our callback
   public override onMouseButton(ev: any): boolean {
     if (ev.button === 0) {
-      this._onMouseButtonCallback();
+      this._onClickCallback();
       return true;
     }
     return false;
+  }
+}
+
+// Following the Bentley tutorial exactly
+class SensorDecorator implements Decorator {
+  private _markers: SensorMarker[] = [];
+
+  public constructor() {
+    this._markers = [];
+  }
+
+  public addMarker(marker: SensorMarker): void {
+    this._markers.push(marker);
+  }
+
+  public decorate(context: DecorateContext): void {
+    this._markers.forEach((marker) => marker.addDecoration(context));
   }
 }
 
@@ -112,72 +127,33 @@ const App: React.FC = () => {
           nonLocatable: true,
         });
         
-        // Enable reality models - using direct property access
-        const displayStyle = vp.view.displayStyle;
-        displayStyle.settings.backgroundMap.enabled = true;
+        // Create the sensor decorator
+        const sensorDecorator = new SensorDecorator();
+        
+        // Add it to the viewport
+        IModelApp.viewManager.addDecorator(sensorDecorator);
 
-        try {
-          // Following Bentley tutorial approach for decorators
-          class SensorDecorator {
-            private _markers: DisplacementSensorMarker[] = [];
-            
-            public constructor(markers: DisplacementSensorMarker[]) {
-              this._markers = markers;
-            }
-            
-            public decorate(context: DecorateContext): void {
-              this._markers.forEach((marker) => marker.addDecoration(context));
-            }
-          }
-          
-          // Helper function to convert lat/lon to spatial coordinates
-          const createGeoMarker = async (
-            latitude: number, 
-            longitude: number, 
-            height: number, 
-            label: string
-          ): Promise<DisplacementSensorMarker | undefined> => {
-            try {
-              // Convert geographic to spatial coordinates
-              const geoCoord = { latitude, longitude, height };
-              const spatialLocation = await vp.iModel.geoServices.spatialFromGeoCoordinates(geoCoord);
-              
-              // Create marker following the tutorial pattern
-              return new DisplacementSensorMarker(
-                spatialLocation,
-                `Displacement Sensor: ${label}`,
-                () => setShowVideo(true)
-              );
-            } catch (error) {
-              console.error(`Error creating marker ${label}:`, error);
-              return undefined;
-            }
-          };
-          
-          // Create markers at your specified coordinates
-          const markers: DisplacementSensorMarker[] = [];
-          
-          const marker1 = await createGeoMarker(42.466527, -71.355628, 200, "Virtual Sensor 1");
-          if (marker1) markers.push(marker1);
-          
-          const marker2 = await createGeoMarker(42.466565, -71.355720, 200, "Virtual Sensor 2");
-          if (marker2) markers.push(marker2);
-          
-          const marker3 = await createGeoMarker(42.466597, -71.355799, 200, "Virtual Sensor 3");
-          if (marker3) markers.push(marker3);
-          
-          // Create and add the decorator
-          const decorator = new SensorDecorator(markers);
-          IModelApp.viewManager.addDecorator(decorator);
-          
-          // Focus the view after a delay
-          setTimeout(() => {
-            vp.zoomToElements(markers.map(m => m.location), { animateFrustumChange: true });
-          }, 1000);
-          
-        } catch (error) {
-          console.error("Error creating geolocated markers:", error);
-        }
+        // Function to create a marker at specific world coordinates
+        const createMarkerAtXYZ = (x: number, y: number, z: number, label: string): SensorMarker => {
+          const worldLocation = new Point3d(x, y, z);
+          const marker = new SensorMarker(worldLocation, label, () => setShowVideo(true));
+          sensorDecorator.addMarker(marker);
+          return marker;
+        };
+
+        // The tutorial doesn't use geolocations directly, so let's use world coordinates initially
+        // We'll create markers at specific locations
+        createMarkerAtXYZ(0, 0, 10, "Virtual Sensor 1");
+        createMarkerAtXYZ(5, 0, 10, "Virtual Sensor 2");
+        createMarkerAtXYZ(10, 0, 10, "Virtual Sensor 3");
+
+        // Try to set the view to show the markers
+        const viewFlags = vp.view.viewFlags.clone();
+        viewFlags.renderMode = 1; // Use realistic rendering
+        vp.view.setViewFlags(viewFlags);
+
+        // Set a good starting view
+        vp.view.lookAt({ eye: [5, -20, 20], target: [5, 0, 0] });
       },
     };
   }, []);
