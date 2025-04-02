@@ -104,6 +104,31 @@ const App: React.FC = () => {
     history.push(url);
   }, [iTwinId, iModelId, changesetId]);
 
+  const viewConfiguration = useCallback((viewPort: ScreenViewport) => {
+    // default execute the fitview tool and use the iso standard view after tile trees are loaded
+    const tileTreesLoaded = () => {
+      return new Promise((resolve, reject) => {
+        const start = new Date();
+        const intvl = setInterval(() => {
+          if (viewPort.areAllTileTreesLoaded) {
+            ViewerPerformance.addMark("TilesLoaded");
+            ViewerPerformance.addMeasure(
+              "TileTreesLoaded",
+              "ViewerStarting",
+              "TilesLoaded"
+            );
+            clearInterval(intvl);
+            resolve(true);
+          }
+          const now = new Date();
+          // after 20 seconds, stop waiting and fit the view
+          if (now.getTime() - start.getTime() > 20000) {
+            reject();
+          }
+        }, 100);
+      });
+    };
+
   const viewCreatorOptions = useMemo(() => {
     return {
       viewportConfigurer: async (vp: ScreenViewport) => {
