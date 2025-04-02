@@ -129,6 +129,12 @@ const App: React.FC = () => {
       });
     };
 
+    tileTreesLoaded().finally(() => {
+      void IModelApp.tools.run(FitViewTool.toolId, viewPort, true, false);
+      viewPort.view.setStandardRotation(StandardViewId.Iso);
+    });
+  }, []);
+
   const viewCreatorOptions = useMemo(() => {
     return {
       viewportConfigurer: async (vp: ScreenViewport) => {
