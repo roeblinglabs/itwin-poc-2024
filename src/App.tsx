@@ -10,10 +10,29 @@ import {
   MeasureTools,
   MeasureToolsUiItemsProvider,
 } from "@itwin/measure-tools-react";
+
+import {
+  AncestorsNavigationControls,
+  CopyPropertyTextContextMenuItem,
+  PropertyGridManager,
+  PropertyGridUiItemsProvider,
+  ShowHideNullValuesSettingsMenuItem,
+} from "@itwin/property-grid-react";
+import {
+  CategoriesTreeComponent,
+  createTreeWidget,
+  ModelsTreeComponent,
+  TreeWidget,
+} from "@itwin/tree-widget-react";
 import {
   useAccessToken,
   Viewer,
+  ViewerContentToolsProvider,
+  ViewerNavigationToolsProvider,
+  ViewerPerformance,
+  ViewerStatusbarItemsProvider,
 } from "@itwin/web-viewer-react";
+
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Point3d } from "@itwin/core-geometry";
