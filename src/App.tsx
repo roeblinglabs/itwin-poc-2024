@@ -216,6 +216,78 @@ const App: React.FC = () => {
         onIModelAppInit={onIModelAppInit}
         mapLayerOptions={{ MapboxImagery: { key: "access_token", value: MapboxKey } }}
         tileAdmin={{ cesiumIonKey: CesiumKey }}
+        backendConfiguration={{
+          defaultBackend: {
+            rpcInterfaces: [ECSchemaRpcInterface],
+          },
+        }}
+        uiProviders={[
+          new ViewerNavigationToolsProvider(),
+          new ViewerContentToolsProvider({
+            vertical: {
+              measureGroup: false,
+            },
+          }),
+          new ViewerStatusbarItemsProvider(),
+          {
+            id: "TreeWidgetUIProvider",
+            getWidgets: () => [
+              createTreeWidget({
+                trees: [
+                  {
+                    id: ModelsTreeComponent.id,
+                    getLabel: () => ModelsTreeComponent.getLabel(),
+                    render: (props) => (
+                      <ModelsTreeComponent
+                        getSchemaContext={getSchemaContext}
+                        density={props.density}
+                        selectionStorage={unifiedSelectionStorage}
+                        selectionMode={"extended"}
+                        onPerformanceMeasured={props.onPerformanceMeasured}
+                        onFeatureUsed={props.onFeatureUsed}
+                      />
+                    ),
+                  },
+                  {
+                    id: CategoriesTreeComponent.id,
+                    getLabel: () => CategoriesTreeComponent.getLabel(),
+                    render: (props) => (
+                      <CategoriesTreeComponent
+                        getSchemaContext={getSchemaContext}
+                        density={props.density}
+                        selectionStorage={unifiedSelectionStorage}
+                        onPerformanceMeasured={props.onPerformanceMeasured}
+                        onFeatureUsed={props.onFeatureUsed}
+                      />
+                    ),
+                  },
+                ],
+              }),
+            ],
+          },
+          new PropertyGridUiItemsProvider({
+            propertyGridProps: {
+              autoExpandChildCategories: true,
+              ancestorsNavigationControls: (props) => (
+                <AncestorsNavigationControls {...props} />
+              ),
+              contextMenuItems: [
+                (props) => <CopyPropertyTextContextMenuItem {...props} />,
+              ],
+              settingsMenuItems: [
+                (props) => (
+                  <ShowHideNullValuesSettingsMenuItem
+                    {...props}
+                    persist={true}
+                  />
+                ),
+              ],
+            },
+          }),
+          new MeasureToolsUiItemsProvider(),
+        ]}
+        selectionStorage={unifiedSelectionStorage}
+        getSchemaContext={getSchemaContext}
       />
     </div>
   );
