@@ -104,7 +104,7 @@ const App: React.FC = () => {
     history.push(url);
   }, [iTwinId, iModelId, changesetId]);
 
-  /** NOTE: This function will execute the "Fit View" tool after the iModel is loaded into the Viewer.
+  //** NOTE: This function will execute the "Fit View" tool after the iModel is loaded into the Viewer.
   const viewConfiguration = useCallback((viewPort: ScreenViewport) => {
     // default execute the fitview tool and use the iso standard view after tile trees are loaded
     const tileTreesLoaded = () => {
