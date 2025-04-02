@@ -174,6 +174,9 @@ const App: React.FC = () => {
   }, []);
 
   const onIModelAppInit = useCallback(async () => {
+    // iModel now initialized
+    await TreeWidget.initialize();
+    await PropertyGridManager.initialize();
     await MeasureTools.startup();
     MeasurementActionToolbar.setDefaultActionProvider();
   }, []);
