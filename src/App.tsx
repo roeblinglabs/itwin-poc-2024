@@ -38,6 +38,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Point3d } from "@itwin/core-geometry";
 import { Auth } from "./Auth";
 import { history } from "./history";
+import { getSchemaContext, unifiedSelectionStorage } from "./selectionStorage";
 
 import { BackgroundMapType } from "@itwin/core-common";
 
