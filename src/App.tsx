@@ -181,24 +181,25 @@ const App: React.FC = () => {
     MeasurementActionToolbar.setDefaultActionProvider();
   }, []);
 
-  return (
-    <div className="viewer-container">
-      {showVideo && (
-        <div className="video-overlay">
-          <iframe
-            width="560"
-            height="315"
-            src="https://www.youtube.com/embed/HZOfR7NVNtA?autoplay=1"
-            title="YouTube video player"
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          ></iframe>
-          <button onClick={() => setShowVideo(false)} className="close-button">
-            Close
-          </button>
-        </div>
-      )}
+return (
+  <div className="viewer-container">
+    {showVideo && (
+      <div className="video-overlay">
+        <video 
+          width="560" 
+          height="315" 
+          autoPlay 
+          loop 
+          controls
+        >
+          <source src="https://connect-projectshareweb.bentley.com/052f290a-d04b-454c-97ce-901f6c0a708f/052f290a-d04b-454c-97ce-901f6c0a708f/d3008f85-2212-4aae-877c-75426cdfadc0" type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+        <button onClick={() => setShowVideo(false)} className="close-button">
+          Close
+        </button>
+      </div>
+    )}
       {!accessToken && (
         <FillCentered>
           <div className="signin-content">
