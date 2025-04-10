@@ -185,16 +185,13 @@ return (
   <div className="viewer-container">
     {showVideo && (
       <div className="video-overlay">
-        <video 
-          width="560" 
-          height="315" 
-          autoPlay 
-          loop 
-          controls
-        >
-          <source src="https://drive.google.com/uc?export=download&id=1d5INEFKK-NBzB_bzKe_L7ligNSr-LbKT" type="video/mp4" />
-          Your browser does not support the video tag.
-        </video>
+        <iframe
+          width="560"
+          height="315"
+          src="https://drive.google.com/file/d/1d5INEFKK-NBzB_bzKe_L7ligNSr-LbKT/preview?autoplay=1&loop=1"
+          allow="autoplay"
+          allowFullScreen
+        ></iframe>
         <button onClick={() => setShowVideo(false)} className="close-button">
           Close
         </button>
