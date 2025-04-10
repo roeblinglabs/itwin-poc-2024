@@ -188,8 +188,9 @@ return (
         <iframe
           width="560"
           height="315"
-          src="https://drive.google.com/file/d/1d5INEFKK-NBzB_bzKe_L7ligNSr-LbKT/preview?autoplay=1&loop=1"
-          allow="autoplay"
+          src="https://drive.google.com/file/d/1d5INEFKK-NBzB_bzKe_L7ligNSr-LbKT/preview"
+          frameBorder="0"
+          allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
           allowFullScreen
         ></iframe>
         <button onClick={() => setShowVideo(false)} className="close-button">
