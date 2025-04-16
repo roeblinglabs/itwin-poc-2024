@@ -65,7 +65,7 @@ const App: React.FC = () => {
   const [iModelId, setIModelId] = useState(process.env.IMJS_IMODEL_ID);
   const [iTwinId, setITwinId] = useState(process.env.IMJS_ITWIN_ID);
   const [MapboxKey] = useState(process.env.REACT_APP_IMJS_MAPBOX_MAPS_KEY ?? "");
-  //const [CesiumKey] = useState(process.env.REACT_APP_IMJS_CESIUM_ION_KEY ?? "");
+  const [CesiumKey] = useState(process.env.REACT_APP_IMJS_CESIUM_ION_KEY ?? "");
   const [changesetId, setChangesetId] = useState(process.env.IMJS_AUTH_CLIENT_CHANGESET_ID);
   const [showVideo, setShowVideo] = useState(false);
 
@@ -214,7 +214,7 @@ return (
         enablePerformanceMonitors={true}
         onIModelAppInit={onIModelAppInit}
         mapLayerOptions={{ MapboxImagery: { key: "access_token", value: MapboxKey } }}
-        //tileAdmin={{ cesiumIonKey: CesiumKey }}
+        tileAdmin={{ cesiumIonKey: CesiumKey }}
         backendConfiguration={{
           defaultBackend: {
             rpcInterfaces: [ECSchemaRpcInterface],
