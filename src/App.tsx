@@ -51,9 +51,44 @@ export class DisplacementSensorMarker extends Marker {
     this.label = label;
     this.labelOffset = { x: 0, y: 30 };
 
+    const iframe = document.createElement("iframe");
+    iframe.width = "560";
+    iframe.height = "315";
+    iframe.src = "https://drive.google.com/file/d/1d5INEFKK-NBzB_bzKe_L7ligNSr-LbKT/preview";
+    iframe.frameBorder = "0";
+    iframe.allow = "autoplay; encrypted-media; fullscreen; picture-in-picture";
+    iframe.allowFullscreen = true;
+    iframe.className = "sensor-iframe";
+
+    const closeButton = document.createElement("button");
+    closeButton.innerText = "Close";
+    closeButton.className = "sensor-close-btn";
+
+    closeButton.onclick = () => {
+      if (this.htmlElement) {
+        this.htmlElement.style.display = "none";
+      }
+      iframe.style.pointerEvents = "none";
+      onClick();
+    };
+
+    const container = document.createElement("div");
+    container.className = "sensor-iframe-container";
+    container.style.width = `${iframe.width}px`;
+    container.style.height = `${iframe.height}px`;
+
+    container.appendChild(iframe);
+    container.appendChild(closeButton);
+
+    this.htmlElement = container;
+    this.htmlElement.style.display = "none";
+
     this.onMouseButton = (ev) => {
       if (ev.button === 0) {
-        onClick(); // Call the provided onClick function
+        if (this.htmlElement) {
+          this.htmlElement.style.display = "block";
+          iframe.style.pointerEvents = "auto";
+        }
         return true;
       }
       return false;
@@ -162,9 +197,9 @@ const App: React.FC = () => {
         }
 
         const displacementMarkers = [
-          new DisplacementSensorMarker(new Point3d(306331.2565266246, 4704271.129384595, 34.838430597992144), { x: 40, y: 40 }, "Virtual Sensor 1", () => setShowVideo(true)),
-          new DisplacementSensorMarker(new Point3d(306324.8776, 4704274.6196, 34.791), { x: 40, y: 40 }, "Virtual Sensor 2", () => setShowVideo(true)),
-          new DisplacementSensorMarker(new Point3d(306337.5113, 4704266.9649, 34.5362), { x: 40, y: 40 }, "Virtual Sensor 3", () => setShowVideo(true)),
+          new DisplacementSensorMarker(new Point3d(306331.2565266246, 4704271.129384595, 34.838430597992144), { x: 40, y: 40 }, "Virtual Sensor 1", () => setShowVideo(false)),
+          new DisplacementSensorMarker(new Point3d(306324.8776, 4704274.6196, 34.791), { x: 40, y: 40 }, "Virtual Sensor 2", () => setShowVideo(false)),
+          new DisplacementSensorMarker(new Point3d(306337.5113, 4704266.9649, 34.5362), { x: 40, y: 40 }, "Virtual Sensor 3", () => setShowVideo(false)),
         ];
 
         const markerDecorator = new MarkerDecorator(displacementMarkers);

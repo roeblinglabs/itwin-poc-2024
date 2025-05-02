@@ -9,3 +9,33 @@
     width: 400px;
   }
 }
+
+.sensor-iframe-container {
+  position: relative;
+  display: inline-block;
+}
+
+.sensor-iframe {
+  border: 1px solid black;
+  border-radius: 5px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+  background-color: white;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  pointer-events: auto;
+}
+
+.sensor-close-btn {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background-color: white;
+  border: 1px solid black;
+  border-radius: 5px;
+  box-shadow: 0px 0px 10px rgba(216, 170, 170, 0.5);
+  cursor: pointer;
+  z-index: 10;
+  pointer-events: auto;
+}
